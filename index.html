@@ -22,7 +22,7 @@
 
 <!-- ─── TOP NAVBAR ─── -->
 <nav class="navbar" id="navbar">
-  <div class="nav-brand" onclick="navigateTo('home')">
+  <div class="nav-brand" onclick="navigateHome()">
     <span class="nav-brand-icon">↻</span> ReLoop
   </div>
   <div class="nav-links" id="navLinks">
@@ -35,8 +35,27 @@
   </div>
   <div class="nav-actions">
     <button class="btn btn-primary btn-sm" onclick="openRoleSelectionModal()" id="nav-get-started">Get Started</button>
-    <div class="nav-user" id="sidebarUserInfo" onclick="openRoleSelectionModal()" style="display:none;">
-      Demo User ▼
+    <div class="nav-user" id="navUserArea" style="display:none; position:relative;">
+      <div class="user-avatar-trigger" onclick="toggleProfileDropdown(event)" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+        <div class="avatar-circle" id="navAvatarInitials">TK</div>
+        <span id="navUserName">Demo User ▼</span>
+      </div>
+      <!-- Profile Dropdown -->
+      <div class="profile-dropdown" id="profileDropdown">
+        <div class="dropdown-header">
+          <div class="dropdown-name" id="dropdownName">Toufiq Khan</div>
+          <div class="dropdown-role" id="dropdownRole">Individual</div>
+        </div>
+        <div class="dropdown-body">
+          <a href="#" onclick="navigateTo('profile', event)">👤 Profile</a>
+          <a href="#" onclick="navigateTo('activity', event)">⚡ My Activity</a>
+          <a href="#" onclick="navigateTo('mylistings', event)" id="dropdown-listings">📋 My Listings</a>
+          <a href="#" onclick="showToast('Settings demo', 'info')">⚙️ Settings</a>
+          <div class="dropdown-divider"></div>
+          <a href="#" onclick="openRoleSelectionModal()">🔄 Switch Role</a>
+          <a href="#" onclick="logout()" style="color:var(--text-muted)">🚪 Logout</a>
+        </div>
+      </div>
     </div>
   </div>
 </nav>
@@ -54,7 +73,7 @@
         <div class="hero-content">
           <h1>Give Things a <br><em class="gradient-text">Second Life.</em></h1>
           <p>ReLoop connects unused products, recyclable materials, makers, buyers, and industries — using AI to find the best next destination for what you no longer need.</p>
-          <div class="hero-actions">
+          <div class="hero-actions" id="heroActions">
             <button class="btn btn-primary btn-lg" onclick="openRoleSelectionModal()">Get Started →</button>
             <button class="btn btn-secondary btn-lg" onclick="document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'})">See How It Works</button>
           </div>
@@ -211,6 +230,60 @@
         Built with Google Gemini AI | Hackathon MVP 2026
       </div>
     </footer>
+  </section>
+
+  <!-- ═══ DASHBOARD PAGE ═══ -->
+  <section class="page-section" id="page-dashboard">
+    <div class="page-header" style="text-align:left; max-width:1000px; margin:0 auto; padding-top:2rem;">
+      <h1 style="font-size:2rem;" id="dashboardGreeting">Good afternoon, Demo 👋</h1>
+      <p style="font-size:1.1rem;">Here's what's happening in your ReLoop account.</p>
+    </div>
+    <div class="page-body container" style="max-width:1000px;">
+      <div class="dashboard-summary-grid" id="dashboardSummaryGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:1.5rem; margin-bottom:3rem;">
+        <!-- JS rendered -->
+      </div>
+      <h3 style="margin-bottom:1.5rem; color:var(--text-secondary);">Quick Actions</h3>
+      <div class="dashboard-actions-grid" id="dashboardActionsGrid" style="display:flex; gap:1rem; flex-wrap:wrap;">
+        <!-- JS rendered -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ PROFILE PAGE ═══ -->
+  <section class="page-section" id="page-profile">
+    <div class="page-header">
+      <h1>My Profile</h1>
+    </div>
+    <div class="page-body container" style="max-width:800px;">
+      <div class="card" style="display:flex; gap:2rem; align-items:center; margin-bottom:2rem;">
+        <div class="avatar-circle-large" id="profileAvatar">TK</div>
+        <div>
+          <h2 style="font-size:2rem; margin-bottom:0.25rem;" id="profileName">Toufiq Khan</h2>
+          <div style="display:flex; gap:1rem; color:var(--text-secondary); font-size:0.95rem;">
+            <span id="profileRoleBadge" class="badge badge-primary">Individual</span>
+            <span id="profileLocation">📍 Dhaka, Bangladesh</span>
+            <span id="profileJoined">📅 Member since August 2026</span>
+          </div>
+        </div>
+      </div>
+      <h3 style="margin-bottom:1.5rem; color:var(--text-secondary);">Statistics</h3>
+      <div class="impact-grid" id="profileStatsGrid" style="grid-template-columns:repeat(2,1fr);">
+        <!-- JS rendered -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ ACTIVITY PAGE ═══ -->
+  <section class="page-section" id="page-activity">
+    <div class="page-header">
+      <h1>⚡ My Activity</h1>
+      <p>Recent actions in your ecosystem.</p>
+    </div>
+    <div class="page-body container" style="max-width:800px;">
+      <div class="activity-timeline" id="activityTimeline">
+        <!-- JS rendered -->
+      </div>
+    </div>
   </section>
 
   <!-- ═══ ANALYZE PAGE ═══ -->

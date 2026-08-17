@@ -10,8 +10,17 @@ function saveState(){localStorage.setItem('reloop_listings',JSON.stringify(userL
 function showToast(msg,type='info'){const c=document.getElementById('toastContainer');const t=document.createElement('div');t.className='toast '+type;t.innerHTML=(type==='success'?'✅':type==='error'?'❌':'ℹ️')+' '+msg;c.appendChild(t);setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),300);},3000);}
 
 // Navigation
+function navigateHome() {
+  window.location.href = '/';
+}
+
 function navigateTo(page, event) {
   if (event) event.preventDefault();
+  
+  // Close dropdown if open
+  const dropdown = document.getElementById('profileDropdown');
+  if (dropdown) dropdown.classList.remove('open');
+
   document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(a => a.classList.remove('active'));
   const el = document.getElementById('page-' + page);
@@ -26,6 +35,9 @@ function navigateTo(page, event) {
   if (page === 'makers') renderMakers();
   if (page === 'recyclers') renderRecyclers();
   if (page === 'mylistings') renderMyListings();
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'profile') renderProfile();
+  if (page === 'activity') renderActivity();
 }
 
 // Impact stats
@@ -344,20 +356,56 @@ function closeRoleModal(e) {
 function selectRole(role) {
   currentRole = role;
   localStorage.setItem('reloopRole', role);
+  localStorage.setItem('reloopLoggedIn', 'true');
   closeRoleModal();
   applyRoleUI();
-  showToast(`Role switched to ${roleDisplayNames[role]}`, 'success');
+  navigateTo('dashboard');
+  showToast(`Logged in as ${MOCK_PROFILES[role].name}`, 'success');
 }
 
+function logout() {
+  localStorage.removeItem('reloopLoggedIn');
+  applyRoleUI();
+  navigateHome();
+  showToast('Logged out successfully', 'info');
+}
+
+function toggleProfileDropdown(e) {
+  e.stopPropagation();
+  const dropdown = document.getElementById('profileDropdown');
+  if (dropdown) dropdown.classList.toggle('open');
+}
+
+document.addEventListener('click', (e) => {
+  const dropdown = document.getElementById('profileDropdown');
+  if (dropdown && dropdown.classList.contains('open') && !e.target.closest('#navUserArea')) {
+    dropdown.classList.remove('open');
+  }
+});
+
 function applyRoleUI() {
-  // Update navbar user info
-  const infoEl = document.getElementById('sidebarUserInfo');
+  const isLoggedIn = localStorage.getItem('reloopLoggedIn') === 'true';
+  const infoEl = document.getElementById('navUserArea');
   const btnEl = document.getElementById('nav-get-started');
-  if (infoEl && btnEl) {
-    infoEl.innerHTML = `Demo User ▼`;
-    // For demo purposes, we can keep the user info always visible or toggle it
-    infoEl.style.display = 'flex';
-    btnEl.style.display = 'none';
+  const heroActions = document.getElementById('heroActions');
+  
+  if (isLoggedIn) {
+    if (infoEl) infoEl.style.display = 'block';
+    if (btnEl) btnEl.style.display = 'none';
+    if (heroActions) heroActions.innerHTML = `<button class="btn btn-primary btn-lg" onclick="navigateTo('dashboard')">Continue to Dashboard →</button>`;
+    
+    // Update profile dropdown and avatar
+    const profile = MOCK_PROFILES[currentRole];
+    if (profile) {
+      document.getElementById('navAvatarInitials').textContent = profile.initials;
+      document.getElementById('navUserName').textContent = profile.name + ' ▼';
+      document.getElementById('dropdownName').textContent = profile.name;
+      document.getElementById('dropdownRole').textContent = profile.roleLabel;
+    }
+  } else {
+    if (infoEl) infoEl.style.display = 'none';
+    if (btnEl) btnEl.style.display = 'block';
+    if (heroActions) heroActions.innerHTML = `<button class="btn btn-primary btn-lg" onclick="openRoleSelectionModal()">Get Started →</button><button class="btn btn-secondary btn-lg" onclick="document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'})">See How It Works</button>`;
   }
 
   // Update Navigation based on role
@@ -371,37 +419,92 @@ function applyRoleUI() {
     showNav('nav-makers-link', false);
     showNav('nav-recyclers-link', false);
     showNav('nav-mylistings-link', true);
+    showNav('dropdown-listings', true);
   } else if (currentRole === 'recycler') {
     showNav('nav-materials-link', true);
     showNav('nav-makers-link', false);
     showNav('nav-recyclers-link', true);
     showNav('nav-mylistings-link', false);
+    showNav('dropdown-listings', false);
   } else if (currentRole === 'industry') {
     showNav('nav-materials-link', true);
     showNav('nav-makers-link', true);
     showNav('nav-recyclers-link', true);
     showNav('nav-mylistings-link', false);
+    showNav('dropdown-listings', false);
   } else if (currentRole === 'maker') {
     showNav('nav-materials-link', true);
     showNav('nav-makers-link', true);
     showNav('nav-recyclers-link', false);
     showNav('nav-mylistings-link', true);
+    showNav('dropdown-listings', true);
   } else if (currentRole === 'buyer') {
     showNav('nav-materials-link', false);
     showNav('nav-makers-link', true);
     showNav('nav-recyclers-link', false);
     showNav('nav-mylistings-link', false);
+    showNav('dropdown-listings', false);
   }
+}
 
-  // Navigate to appropriate default page for the role if current page is hidden
-  const currentNav = document.getElementById('nav-' + currentPage);
-  if (currentNav && currentNav.style.display === 'none') {
-    if (currentRole === 'buyer' || currentRole === 'recycler' || currentRole === 'industry' || currentRole === 'maker') {
-      navigateTo('marketplace');
-    } else {
-      navigateTo('home');
-    }
+function renderDashboard() {
+  const profile = MOCK_PROFILES[currentRole];
+  if(!profile) return;
+  document.getElementById('dashboardGreeting').innerHTML = `Good afternoon, ${profile.name.split(' ')[0]} 👋`;
+  
+  const grid = document.getElementById('dashboardSummaryGrid');
+  grid.innerHTML = profile.summaryStats.map(s => `
+    <div class="summary-card">
+      <h4>${s.label}</h4>
+      <div class="val">${s.value}</div>
+    </div>
+  `).join('');
+
+  const actions = document.getElementById('dashboardActionsGrid');
+  let actionHtml = '';
+  if (currentRole === 'individual') {
+    actionHtml = `<button class="btn btn-primary" onclick="navigateTo('analyze')">🔬 Analyze Item</button><button class="btn btn-secondary" onclick="navigateTo('marketplace')">🛒 Browse Marketplace</button>`;
+  } else if (currentRole === 'recycler') {
+    actionHtml = `<button class="btn btn-primary" onclick="navigateTo('materials')">🏭 View Material Requests</button>`;
+  } else if (currentRole === 'industry') {
+    actionHtml = `<button class="btn btn-primary" onclick="navigateTo('recyclers')">♻️ Find Suppliers</button>`;
+  } else if (currentRole === 'maker') {
+    actionHtml = `<button class="btn btn-primary" onclick="navigateTo('marketplace')">🛒 Find Materials</button>`;
+  } else if (currentRole === 'buyer') {
+    actionHtml = `<button class="btn btn-primary" onclick="navigateTo('marketplace')">🛒 Browse Products</button>`;
   }
+  actions.innerHTML = actionHtml;
+}
+
+function renderProfile() {
+  const profile = MOCK_PROFILES[currentRole];
+  if(!profile) return;
+  document.getElementById('profileAvatar').textContent = profile.initials;
+  document.getElementById('profileName').textContent = profile.name;
+  document.getElementById('profileRoleBadge').textContent = profile.roleLabel;
+  document.getElementById('profileLocation').textContent = `📍 ${profile.location}`;
+  document.getElementById('profileJoined').textContent = `📅 Member since ${profile.memberSince}`;
+  
+  document.getElementById('profileStatsGrid').innerHTML = profile.stats.map(s => `
+    <div class="summary-card">
+      <h4>${s.label}</h4>
+      <div class="val">${s.value}</div>
+    </div>
+  `).join('');
+}
+
+function renderActivity() {
+  const profile = MOCK_PROFILES[currentRole];
+  if(!profile) return;
+  document.getElementById('activityTimeline').innerHTML = profile.activities.map(a => `
+    <div class="activity-item">
+      <div class="activity-icon">${a.icon}</div>
+      <div class="activity-content">
+        <div class="activity-time">${a.time}</div>
+        <div class="activity-desc">${a.action} <span class="activity-detail">${a.detail || a.type}</span></div>
+      </div>
+    </div>
+  `).join('');
 }
 
 // Initial UI setup

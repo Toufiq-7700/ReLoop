@@ -10,31 +10,23 @@ function saveState(){localStorage.setItem('reloop_listings',JSON.stringify(userL
 function showToast(msg,type='info'){const c=document.getElementById('toastContainer');const t=document.createElement('div');t.className='toast '+type;t.innerHTML=(type==='success'?'✅':type==='error'?'❌':'ℹ️')+' '+msg;c.appendChild(t);setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),300);},3000);}
 
 // Navigation
-function navigateTo(page){
-  document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.sidebar-nav a').forEach(a=>a.classList.remove('active'));
-  const el=document.getElementById('page-'+page);
-  if(el){el.classList.add('active');currentPage=page;}
-  const nav=document.querySelector(`[data-page="${page}"]`);
-  if(nav)nav.classList.add('active');
-  const mc=document.getElementById('mainContent');
-  if(page==='home')mc.classList.add('landing');else mc.classList.remove('landing');
-  document.getElementById('sidebar').classList.remove('open');
-  window.scrollTo(0,0);
-  if(page==='marketplace')renderMarketplace();
-  if(page==='materials')renderMaterials();
-  if(page==='makers')renderMakers();
-  if(page==='recyclers')renderRecyclers();
-  if(page==='mylistings')renderMyListings();
+function navigateTo(page, event) {
+  if (event) event.preventDefault();
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(a => a.classList.remove('active'));
+  const el = document.getElementById('page-' + page);
+  if (el) { el.classList.add('active'); currentPage = page; }
+  const nav = document.querySelector(`[data-page="${page}"]`);
+  if (nav) nav.classList.add('active');
+  const mc = document.getElementById('mainContent');
+  if (page === 'home') mc.classList.add('landing'); else mc.classList.remove('landing');
+  window.scrollTo(0, 0);
+  if (page === 'marketplace') renderMarketplace();
+  if (page === 'materials') renderMaterials();
+  if (page === 'makers') renderMakers();
+  if (page === 'recyclers') renderRecyclers();
+  if (page === 'mylistings') renderMyListings();
 }
-
-// Sidebar nav
-document.getElementById('sidebarNav').addEventListener('click',e=>{
-  const a=e.target.closest('a');if(!a)return;e.preventDefault();navigateTo(a.dataset.page);
-});
-document.getElementById('sidebarToggle').addEventListener('click',()=>{
-  document.getElementById('sidebar').classList.toggle('open');
-});
 
 // Impact stats
 function renderImpact(){
@@ -358,58 +350,47 @@ function selectRole(role) {
 }
 
 function applyRoleUI() {
-  // Update sidebar user info
+  // Update navbar user info
   const infoEl = document.getElementById('sidebarUserInfo');
-  if (infoEl) {
-    infoEl.innerHTML = `Demo User<br><small>${roleDisplayNames[currentRole]} ▼</small>`;
+  const btnEl = document.getElementById('nav-get-started');
+  if (infoEl && btnEl) {
+    infoEl.innerHTML = `Demo User ▼`;
+    // For demo purposes, we can keep the user info always visible or toggle it
+    infoEl.style.display = 'flex';
+    btnEl.style.display = 'none';
   }
 
   // Update Navigation based on role
   const showNav = (id, show) => {
     const el = document.getElementById(id);
-    if (el) el.style.display = show ? 'flex' : 'none';
+    if (el) el.style.display = show ? 'block' : 'none';
   };
 
   if (currentRole === 'individual') {
-    showNav('nav-home', true);
-    showNav('nav-analyze', true);
-    showNav('nav-marketplace', true);
-    showNav('nav-materials', false);
-    showNav('nav-makers', false);
-    showNav('nav-recyclers', false);
-    showNav('nav-mylistings', true);
+    showNav('nav-materials-link', false);
+    showNav('nav-makers-link', false);
+    showNav('nav-recyclers-link', false);
+    showNav('nav-mylistings-link', true);
   } else if (currentRole === 'recycler') {
-    showNav('nav-home', true);
-    showNav('nav-analyze', false);
-    showNav('nav-marketplace', true);
-    showNav('nav-materials', true);
-    showNav('nav-makers', false);
-    showNav('nav-recyclers', true);
-    showNav('nav-mylistings', false);
+    showNav('nav-materials-link', true);
+    showNav('nav-makers-link', false);
+    showNav('nav-recyclers-link', true);
+    showNav('nav-mylistings-link', false);
   } else if (currentRole === 'industry') {
-    showNav('nav-home', true);
-    showNav('nav-analyze', false);
-    showNav('nav-marketplace', true);
-    showNav('nav-materials', true);
-    showNav('nav-makers', true);
-    showNav('nav-recyclers', true);
-    showNav('nav-mylistings', false);
+    showNav('nav-materials-link', true);
+    showNav('nav-makers-link', true);
+    showNav('nav-recyclers-link', true);
+    showNav('nav-mylistings-link', false);
   } else if (currentRole === 'maker') {
-    showNav('nav-home', true);
-    showNav('nav-analyze', false);
-    showNav('nav-marketplace', true);
-    showNav('nav-materials', true);
-    showNav('nav-makers', true);
-    showNav('nav-recyclers', false);
-    showNav('nav-mylistings', true);
+    showNav('nav-materials-link', true);
+    showNav('nav-makers-link', true);
+    showNav('nav-recyclers-link', false);
+    showNav('nav-mylistings-link', true);
   } else if (currentRole === 'buyer') {
-    showNav('nav-home', true);
-    showNav('nav-analyze', false);
-    showNav('nav-marketplace', true);
-    showNav('nav-materials', false);
-    showNav('nav-makers', true);
-    showNav('nav-recyclers', false);
-    showNav('nav-mylistings', false);
+    showNav('nav-materials-link', false);
+    showNav('nav-makers-link', true);
+    showNav('nav-recyclers-link', false);
+    showNav('nav-mylistings-link', false);
   }
 
   // Navigate to appropriate default page for the role if current page is hidden
@@ -427,3 +408,46 @@ function applyRoleUI() {
 applyRoleUI();
 navigateTo('home');
 
+// Scroll Animations (Intersection Observer)
+const observerOptions = {
+  root: null,
+  rootMargin: '0px',
+  threshold: 0.1
+};
+
+const observer = new IntersectionObserver((entries, observer) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('is-visible');
+      observer.unobserve(entry.target);
+    }
+  });
+}, observerOptions);
+
+document.querySelectorAll('.animate-on-scroll').forEach(el => {
+  observer.observe(el);
+});
+
+// Generate Floating Squares
+function generateSquares() {
+  const container = document.getElementById('floatingSquares');
+  if (!container) return;
+  const numSquares = 15;
+  for (let i = 0; i < numSquares; i++) {
+    const square = document.createElement('div');
+    square.className = 'square';
+    const size = Math.random() * 80 + 20;
+    const left = Math.random() * 100;
+    const top = Math.random() * 100;
+    const delay = Math.random() * 5;
+    const duration = Math.random() * 10 + 10;
+    square.style.width = `${size}px`;
+    square.style.height = `${size}px`;
+    square.style.left = `${left}%`;
+    square.style.top = `${top}%`;
+    square.style.animationDelay = `${delay}s`;
+    square.style.animationDuration = `${duration}s`;
+    container.appendChild(square);
+  }
+}
+generateSquares();

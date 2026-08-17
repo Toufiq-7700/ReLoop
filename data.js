@@ -455,7 +455,132 @@ const IMPACT_STATS = {
   localMakers: 84
 };
 
+const MOCK_PROFILES = {
+  individual: {
+    name: "Toufiq Khan",
+    initials: "TK",
+    roleLabel: "Individual",
+    location: "Dhaka, Bangladesh",
+    memberSince: "August 2026",
+    stats: [
+      { label: "Items Listed", value: 12 },
+      { label: "Items Reused", value: 4 },
+      { label: "Recycling Requests", value: 3 },
+      { label: "Saved Items", value: 8 }
+    ],
+    summaryStats: [
+      { label: "My Listings", value: 4 },
+      { label: "Saved Items", value: 8 },
+      { label: "Collection Requests", value: 2 },
+      { label: "Given a Second Life", value: 6 }
+    ],
+    activities: [
+      { time: "Today", action: "Analyzed:", detail: "Plastic Bottles", icon: "🔬" },
+      { time: "Today", action: "Requested collection from:", detail: "GreenCycle", icon: "🚛" },
+      { time: "Yesterday", action: "Created listing:", detail: "Old Wooden Chair", icon: "📝" },
+      { time: "Yesterday", action: "Saved:", detail: "Recycled Denim Bag", icon: "❤️" }
+    ]
+  },
+  recycler: {
+    name: "EcoCycle Demo",
+    initials: "ED",
+    roleLabel: "Recycler",
+    location: "Mirpur, Dhaka",
+    memberSince: "May 2025",
+    stats: [
+      { label: "Collections", value: 32 },
+      { label: "Active Requests", value: 14 },
+      { label: "Material Types", value: 5 },
+      { label: "Kg Recovered", value: 450 }
+    ],
+    summaryStats: [
+      { label: "Active Requests", value: 14 },
+      { label: "Completed Collections", value: 32 },
+      { label: "Materials Accepted", value: 5 },
+      { label: "Pending Pickups", value: 3 }
+    ],
+    activities: [
+      { time: "Today", action: "Accepted collection from:", detail: "Toufiq Khan", icon: "✅" },
+      { time: "Yesterday", action: "Updated material pricing:", detail: "PET Plastic", icon: "📈" },
+      { time: "Yesterday", action: "Completed pickup:", detail: "Cardboard boxes (20kg)", icon: "🚛" }
+    ]
+  },
+  industry: {
+    name: "ABC Plastics Ltd.",
+    initials: "AP",
+    roleLabel: "Industry",
+    location: "Gazipur, Dhaka",
+    memberSince: "January 2026",
+    stats: [
+      { label: "Material Requests", value: 8 },
+      { label: "Suppliers Connected", value: 24 },
+      { label: "Materials Received", value: "1,200 kg" },
+      { label: "Active Requirements", value: 3 }
+    ],
+    summaryStats: [
+      { label: "Active Requirements", value: 3 },
+      { label: "Suppliers Found", value: 12 },
+      { label: "Materials Received", value: "120 kg" },
+      { label: "Pending Offers", value: 4 }
+    ],
+    activities: [
+      { time: "Today", action: "Posted requirement:", detail: "500kg PET Plastic", icon: "📢" },
+      { time: "Today", action: "Accepted offer from:", detail: "GreenCycle BD", icon: "🤝" },
+      { time: "2 days ago", action: "Received shipment:", detail: "Aluminum Scrap", icon: "📦" }
+    ]
+  },
+  maker: {
+    name: "EcoCraft Studio",
+    initials: "EC",
+    roleLabel: "Maker",
+    location: "Uttara, Dhaka",
+    memberSince: "November 2025",
+    stats: [
+      { label: "Products Listed", value: 24 },
+      { label: "Products Sold", value: 142 },
+      { label: "Materials Collected", value: "85 kg" },
+      { label: "Active Products", value: 8 }
+    ],
+    summaryStats: [
+      { label: "Active Products", value: 8 },
+      { label: "Sales this month", value: 15 },
+      { label: "Materials Found", value: "12 kg" },
+      { label: "Pending Orders", value: 3 }
+    ],
+    activities: [
+      { time: "Today", action: "Sold:", detail: "Handmade Bottle Planter", icon: "💰" },
+      { time: "Yesterday", action: "Sourced material:", type: "Wood from Rahim", icon: "🪵" },
+      { time: "3 days ago", action: "Created listing:", detail: "Mosaic Art", icon: "📝" }
+    ]
+  },
+  buyer: {
+    name: "Sarah Ahmed",
+    initials: "SA",
+    roleLabel: "Buyer",
+    location: "Gulshan, Dhaka",
+    memberSince: "February 2026",
+    stats: [
+      { label: "Purchases", value: 15 },
+      { label: "Saved Items", value: 24 },
+      { label: "Active Requests", value: 2 },
+      { label: "Favorite Sellers", value: 5 }
+    ],
+    summaryStats: [
+      { label: "Recent Purchases", value: 3 },
+      { label: "Saved Items", value: 24 },
+      { label: "Messages", value: 2 },
+      { label: "Followed Makers", value: 5 }
+    ],
+    activities: [
+      { time: "Today", action: "Purchased:", detail: "Recycled Denim Tote Bag", icon: "🛍️" },
+      { time: "Yesterday", action: "Saved:", detail: "Reclaimed Wood Table", icon: "❤️" },
+      { time: "Yesterday", action: "Followed maker:", detail: "EcoCraft Studio", icon: "👤" }
+    ]
+  }
+};
+
 // Export for use in other modules
 if (typeof module !== 'undefined') {
-  module.exports = { MOCK_LISTINGS, MOCK_MATERIALS, MOCK_MAKERS, MOCK_RECYCLERS, DEMO_ITEMS, IMPACT_STATS };
+  module.exports = { MOCK_LISTINGS, MOCK_MATERIALS, MOCK_MAKERS, MOCK_RECYCLERS, DEMO_ITEMS, IMPACT_STATS, MOCK_PROFILES };
 }
+

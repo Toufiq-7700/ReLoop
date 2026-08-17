@@ -11,7 +11,7 @@ function showToast(msg,type='info'){const c=document.getElementById('toastContai
 
 // Navigation
 function navigateHome() {
-  window.location.href = '/';
+  navigateTo('home');
 }
 
 function navigateTo(page, event) {

@@ -579,8 +579,43 @@ const MOCK_PROFILES = {
   }
 };
 
+const MOCK_COLLECTION_REQUESTS = [
+  { id: 101, user: "Toufiq Khan", item: "50 PET Plastic Bottles", qty: "8 kg", location: "Dhanmondi, Dhaka", date: "2026-08-18", status: "Pending Pickup", recycler: "GreenCycle BD", emoji: "🍾" },
+  { id: 102, user: "Nasrin Begum", item: "Cardboard Packaging", qty: "15 kg", location: "Mirpur, Dhaka", date: "2026-08-19", status: "Accepted", recycler: "GreenCycle BD", emoji: "📦" },
+  { id: 103, user: "Karim Hossain", item: "Aluminum Cans & Scrap", qty: "12 kg", location: "Mohammadpur, Dhaka", date: "2026-08-20", status: "Completed", recycler: "EcoMetal Recyclers", emoji: "⚙️" },
+  { id: 104, user: "Rahim Uddin", item: "E-Waste / Old Printers", qty: "5 kg", location: "Uttara, Dhaka", date: "2026-08-21", status: "Pending Pickup", recycler: "E-Waste Safe BD", emoji: "💻" }
+];
+
+const MOCK_INDUSTRY_REQUIREMENTS = [
+  { id: 201, company: "ABC Plastics Ltd.", material: "PET Plastic Bottles", quantity: "500 kg/month", price: "৳ 45/kg", location: "Gazipur", status: "Actively Sourcing", emoji: "🏭" },
+  { id: 202, company: "GreenMetal Ltd.", material: "Aluminum Scrap", quantity: "200 kg/month", price: "৳ 120/kg", location: "Narayanganj", status: "Actively Sourcing", emoji: "⚙️" },
+  { id: 203, company: "EcoBoard Factory", material: "Compressed Cardboard", quantity: "1 ton/month", price: "৳ 25/kg", location: "Savar", status: "Actively Sourcing", emoji: "📋" },
+  { id: 204, company: "ReFiber BD", material: "Textile Scraps", quantity: "300 kg/month", price: "৳ 35/kg", location: "Ashulia", status: "Actively Sourcing", emoji: "🧶" }
+];
+
+const MOCK_SAVED_ITEMS = [
+  { id: 1, title: "Reclaimed Wood Coffee Table", category: "Furniture", price: 2500, emoji: "🪑", seller: "Rahim Uddin", location: "Dhanmondi, Dhaka" },
+  { id: 3, title: "Handmade Bottle Planter", category: "Handmade", price: 450, emoji: "🌱", seller: "EcoCraft Studio", location: "Uttara, Dhaka" },
+  { id: 6, title: "Recycled Denim Tote Bag", category: "Handmade", price: 650, emoji: "🎒", seller: "ReThread", location: "Dhanmondi, Dhaka" },
+  { id: 8, title: "Upcycled Tin Can Lantern", category: "Handmade", price: 350, emoji: "🏮", seller: "TinCraft BD", location: "Dhanmondi, Dhaka" }
+];
+
+const MOCK_PURCHASES = [
+  { id: 501, title: "Recycled Denim Tote Bag", date: "2026-08-15", price: 650, seller: "ReThread", status: "Delivered", emoji: "🎒" },
+  { id: 502, title: "Handmade Bottle Planter", date: "2026-08-10", price: 450, seller: "EcoCraft Studio", status: "Delivered", emoji: "🌱" },
+  { id: 503, title: "Upcycled Tin Can Lantern", date: "2026-08-02", price: 350, seller: "TinCraft BD", status: "Delivered", emoji: "🏮" }
+];
+
+const MOCK_MAKER_PRODUCTS = [
+  { id: 3, title: "Handmade Bottle Planter", category: "Handmade", price: 450, sales: 42, status: "Active", emoji: "🌱" },
+  { id: 6, title: "Recycled Denim Tote Bag", category: "Handmade", price: 650, sales: 28, status: "Active", emoji: "🎒" },
+  { id: 8, title: "Upcycled Tin Can Lantern", category: "Handmade", price: 350, sales: 19, status: "Active", emoji: "🏮" },
+  { id: 12, title: "Reclaimed Pallet Shelf", category: "Furniture", price: 1200, sales: 15, status: "Active", emoji: "🪵" }
+];
+
 // Export for use in other modules
 if (typeof module !== 'undefined') {
-  module.exports = { MOCK_LISTINGS, MOCK_MATERIALS, MOCK_MAKERS, MOCK_RECYCLERS, DEMO_ITEMS, IMPACT_STATS, MOCK_PROFILES };
+  module.exports = { MOCK_LISTINGS, MOCK_MATERIALS, MOCK_MAKERS, MOCK_RECYCLERS, DEMO_ITEMS, IMPACT_STATS, MOCK_PROFILES, MOCK_COLLECTION_REQUESTS, MOCK_INDUSTRY_REQUIREMENTS, MOCK_SAVED_ITEMS, MOCK_PURCHASES, MOCK_MAKER_PRODUCTS };
 }
+
 

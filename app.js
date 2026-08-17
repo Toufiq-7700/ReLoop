@@ -49,6 +49,16 @@ function navigateTo(page, event) {
   if (page === 'dashboard') renderDashboard();
   if (page === 'profile') renderProfile();
   if (page === 'activity') renderActivity();
+  if (page === 'collection') renderCollection();
+  if (page === 'mymaterials') renderMyMaterials();
+  if (page === 'industry_demand') renderIndustryDemand();
+  if (page === 'suppliers') renderSuppliers();
+  if (page === 'requests') renderRequests();
+  if (page === 'myproducts') renderMyProducts();
+  if (page === 'saved_items') renderSavedItems();
+  if (page === 'purchases') renderPurchases();
+  if (page === 'categories') renderCategories();
+  if (page === 'createproduct') { openCreateListingModal(); navigateTo('myproducts'); }
 }
 
 // Impact stats
@@ -202,32 +212,63 @@ let activeFilter='All';
 function renderMarketplace(){
   const tabs=['All','Reusable Items','Recyclable Materials','Handmade','Free / Donate'];
   const chips=['Plastic','Metal','Wood','Paper','Electronics','Clothes','Furniture','Handmade'];
-  document.getElementById('filterTabs').innerHTML=
-    tabs.map(t=>`<button class="filter-tab ${activeFilter===t?'active':''}" onclick="setFilter('${t}')">${t}</button>`).join('')+
-    chips.map(c=>`<button class="filter-tab" onclick="searchChip('${c}')">${c}</button>`).join('');
+  const filterTabsContainer = document.getElementById('filterTabs');
+  if (filterTabsContainer) {
+    filterTabsContainer.innerHTML=
+      tabs.map(t=>`<button class="filter-tab ${activeFilter===t?'active':''}" onclick="setFilter('${t}')">${t}</button>`).join('')+
+      chips.map(c=>`<button class="filter-tab" onclick="searchChip('${c}')">${c}</button>`).join('');
+  }
   let items=[...MOCK_LISTINGS,...userListings];
-  const q=(document.getElementById('marketplaceSearch')?.value||'').toLowerCase();
+  const searchInput = document.getElementById('marketSearch') || document.getElementById('marketplaceSearch');
+  const q=(searchInput?.value||'').toLowerCase();
   if(q)items=items.filter(i=>(i.title+i.category+i.material+i.description).toLowerCase().includes(q));
   if(activeFilter==='Reusable Items')items=items.filter(i=>i.tag==='reusable');
   else if(activeFilter==='Recyclable Materials')items=items.filter(i=>i.tag==='recyclable');
   else if(activeFilter==='Handmade')items=items.filter(i=>i.tag==='handmade');
   else if(activeFilter==='Free / Donate')items=items.filter(i=>i.price===0||i.tag==='donate');
-  document.getElementById('listingsGrid').innerHTML=items.length?items.map(i=>`
-    <div class="listing-card" onclick="openListingModal(${i.id})">
-      <div class="listing-img"><span class="listing-tag badge badge-primary">${i.tag||i.category}</span>${i.emoji||'📦'}</div>
-      <div class="listing-body">
-        <div class="listing-title">${i.title}</div>
-        <div class="listing-meta"><span>📍 ${i.location}</span><span>📂 ${i.category}</span><span>🔧 ${i.condition}</span></div>
-        <div class="listing-footer">
-          <span class="listing-price ${i.price===0?'free':''}">${i.price===0?'Free':i.currency+' '+i.price.toLocaleString()}</span>
-          <span class="badge badge-role">${i.sellerRole}</span>
+  
+  const gridContainer = document.getElementById('marketplaceGrid') || document.getElementById('listingsGrid');
+  if (gridContainer) {
+    gridContainer.innerHTML=items.length?items.map(i=>`
+      <div class="listing-card card" onclick="openListingModal(${i.id})">
+        <div class="listing-img" style="font-size:3rem; text-align:center; padding:1.5rem 0; background:rgba(255,255,255,0.03); border-radius:12px 12px 0 0; position:relative;">
+          <span class="listing-tag badge badge-primary" style="position:absolute; top:10px; right:10px;">${i.tag||i.category}</span>
+          ${i.emoji||'📦'}
         </div>
-      </div>
-    </div>`).join(''):'<div class="empty-state"><div class="empty-state-icon">🛒</div><h3>No listings found</h3><p>Try a different search or filter.</p></div>';
+        <div class="listing-body" style="padding:1rem;">
+          <div class="listing-title" style="font-size:1.1rem; font-weight:700; margin-bottom:0.5rem;">${i.title}</div>
+          <div class="listing-meta" style="font-size:0.85rem; color:var(--text-secondary); display:flex; gap:0.75rem; flex-wrap:wrap; margin-bottom:0.75rem;">
+            <span>📍 ${i.location}</span><span>📂 ${i.category}</span><span>🔧 ${i.condition}</span>
+          </div>
+          <div class="listing-footer" style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-light); padding-top:0.75rem;">
+            <span class="listing-price" style="font-size:1.1rem; font-weight:700; color:var(--accent-emerald);">${i.price===0?'Free':i.currency+' '+i.price.toLocaleString()}</span>
+            <span class="badge badge-secondary">${i.sellerRole}</span>
+          </div>
+        </div>
+      </div>`).join(''):'<div class="empty-state" style="grid-column:1/-1; text-align:center; padding:3rem;"><div class="empty-state-icon" style="font-size:3rem; margin-bottom:1rem;">🛒</div><h3>No listings found</h3><p style="color:var(--text-secondary);">Try a different search query or category filter.</p></div>';
+  }
 }
 function setFilter(f){activeFilter=f;renderMarketplace();}
+function filterMarketCategory(cat, el) {
+  if (el) {
+    document.querySelectorAll('#marketCategoryTabs .tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  }
+  const map = {
+    'all': 'All',
+    'reusable': 'Reusable Items',
+    'recyclable': 'Recyclable Materials',
+    'handmade': 'Handmade',
+    'donate': 'Free / Donate'
+  };
+  setFilter(map[cat] || 'All');
+}
 function filterMarketplace(){renderMarketplace();}
-function searchChip(c){document.getElementById('marketplaceSearch').value=c;renderMarketplace();}
+function searchChip(c){
+  const searchInput = document.getElementById('marketSearch') || document.getElementById('marketplaceSearch');
+  if (searchInput) searchInput.value=c;
+  renderMarketplace();
+}
 
 // Materials
 function renderMaterials(){
@@ -379,6 +420,218 @@ function closeRoleModal(e) {
   }
 }
 
+// ============================================================
+// ROLE CONFIGURATION SYSTEM
+// ============================================================
+const ROLE_CONFIG = {
+  individual: {
+    nav: [
+      { label: 'Dashboard', page: 'dashboard' },
+      { label: 'Analyze Item', page: 'analyze' },
+      { label: 'Marketplace', page: 'marketplace' },
+      { label: 'My Listings', page: 'mylistings' },
+      { label: 'Collection', page: 'collection' },
+      { label: 'Activity', page: 'activity' }
+    ],
+    dropdown: [
+      { label: '👤 My Profile', page: 'profile' },
+      { label: '⚡ My Activity', page: 'activity' },
+      { label: '📋 My Listings', page: 'mylistings' },
+      { label: '❤️ Saved Items', page: 'saved_items' }
+    ],
+    headline: "Give your unused items a second life.",
+    subhead: "Analyze items with AI, sell or donate, request waste collection, and find local recyclers.",
+    actions: [
+      { label: "🔬 Analyze Item", action: "navigateTo('analyze')", primary: true },
+      { label: "📋 Create Listing", action: "openCreateListingModal()", primary: true },
+      { label: "♻️ Find Recycler", action: "navigateTo('recyclers')", primary: true },
+      { label: "🚛 Request Collection", action: "navigateTo('collection')", primary: true }
+    ],
+    footerColTitle: "For You",
+    footerColLinks: [
+      { label: "Analyze Item", page: "analyze" },
+      { label: "Marketplace", page: "marketplace" },
+      { label: "My Listings", page: "mylistings" },
+      { label: "Collection", page: "collection" }
+    ],
+    footerExploreLinks: [
+      { label: "Makers", page: "makers" },
+      { label: "Recyclers", page: "recyclers" },
+      { label: "Industries", page: "materials" }
+    ],
+    footerAccountLinks: [
+      { label: "Profile", page: "profile" },
+      { label: "Activity", page: "activity" },
+      { label: "Switch Role", action: "openRoleSelectionModal()" }
+    ]
+  },
+  recycler: {
+    nav: [
+      { label: 'Dashboard', page: 'dashboard' },
+      { label: 'Available Materials', page: 'materials' },
+      { label: 'Collection Requests', page: 'collection' },
+      { label: 'My Materials', page: 'mymaterials' },
+      { label: 'Industry Demand', page: 'industry_demand' },
+      { label: 'Activity', page: 'activity' }
+    ],
+    dropdown: [
+      { label: '👤 My Profile', page: 'profile' },
+      { label: '⚡ My Collection Activity', page: 'activity' },
+      { label: '📦 Accepted Materials', page: 'mymaterials' },
+      { label: '🚛 Collection Requests', page: 'collection' }
+    ],
+    headline: "Find materials and manage collection requests.",
+    subhead: "Connect with individuals who have recyclables, manage your pickups, and supply industries.",
+    actions: [
+      { label: "📋 View Requests", action: "navigateTo('collection')", primary: true },
+      { label: "🔍 Find Materials", action: "navigateTo('materials')", primary: true },
+      { label: "📦 Manage Materials", action: "navigateTo('mymaterials')", primary: true },
+      { label: "🏭 View Industry Demand", action: "navigateTo('industry_demand')", primary: true }
+    ],
+    footerColTitle: "Recycler",
+    footerColLinks: [
+      { label: "Available Materials", page: "materials" },
+      { label: "Collection Requests", page: "collection" },
+      { label: "My Materials", page: "mymaterials" },
+      { label: "Industry Demand", page: "industry_demand" }
+    ],
+    footerExploreLinks: [
+      { label: "Marketplace", page: "marketplace" },
+      { label: "Industries", page: "industry_demand" },
+      { label: "Makers", page: "makers" }
+    ],
+    footerAccountLinks: [
+      { label: "Profile", page: "profile" },
+      { label: "Activity", page: "activity" },
+      { label: "Switch Role", action: "openRoleSelectionModal()" }
+    ]
+  },
+  industry: {
+    nav: [
+      { label: 'Dashboard', page: 'dashboard' },
+      { label: 'Materials Needed', page: 'industry_demand' },
+      { label: 'Suppliers', page: 'suppliers' },
+      { label: 'Available Materials', page: 'materials' },
+      { label: 'Requests', page: 'requests' },
+      { label: 'Activity', page: 'activity' }
+    ],
+    dropdown: [
+      { label: '🏢 Company Profile', page: 'profile' },
+      { label: '📋 Material Requirements', page: 'industry_demand' },
+      { label: '🤝 Suppliers', page: 'suppliers' },
+      { label: '📩 Requests', page: 'requests' },
+      { label: '⚡ Activity', page: 'activity' }
+    ],
+    headline: "Source recyclable materials for your business.",
+    subhead: "Post your material requirements, connect with certified recyclers and scrap suppliers.",
+    actions: [
+      { label: "📢 Post Requirement", action: "openPostRequirementModal()", primary: true },
+      { label: "🤝 Find Suppliers", action: "navigateTo('suppliers')", primary: true },
+      { label: "📦 Browse Materials", action: "navigateTo('materials')", primary: true },
+      { label: "📩 View Requests", action: "navigateTo('requests')", primary: true }
+    ],
+    footerColTitle: "Industry",
+    footerColLinks: [
+      { label: "Materials Needed", page: "industry_demand" },
+      { label: "Suppliers", page: "suppliers" },
+      { label: "Available Materials", page: "materials" },
+      { label: "Requests", page: "requests" }
+    ],
+    footerExploreLinks: [
+      { label: "Recyclers", page: "recyclers" },
+      { label: "Makers", page: "makers" },
+      { label: "Marketplace", page: "marketplace" }
+    ],
+    footerAccountLinks: [
+      { label: "Profile", page: "profile" },
+      { label: "Activity", page: "activity" },
+      { label: "Switch Role", action: "openRoleSelectionModal()" }
+    ]
+  },
+  maker: {
+    nav: [
+      { label: 'Dashboard', page: 'dashboard' },
+      { label: 'Find Materials', page: 'materials' },
+      { label: 'My Products', page: 'myproducts' },
+      { label: 'Create Product', page: 'createproduct' },
+      { label: 'Marketplace', page: 'marketplace' },
+      { label: 'Activity', page: 'activity' }
+    ],
+    dropdown: [
+      { label: '👤 My Profile', page: 'profile' },
+      { label: '🎨 My Products', page: 'myproducts' },
+      { label: '📦 Materials', page: 'materials' },
+      { label: '📩 Orders / Requests', page: 'requests' },
+      { label: '⚡ Activity', page: 'activity' }
+    ],
+    headline: "Find materials and create something new.",
+    subhead: "Discover reclaimed wood, textiles, and plastic scraps to create and list upcycled crafts.",
+    actions: [
+      { label: "🔍 Find Materials", action: "navigateTo('materials')", primary: true },
+      { label: "🎨 Create Product", action: "openCreateListingModal()", primary: true },
+      { label: "📦 Manage Products", action: "navigateTo('myproducts')", primary: true },
+      { label: "🛒 Browse Marketplace", action: "navigateTo('marketplace')", primary: true }
+    ],
+    footerColTitle: "Maker",
+    footerColLinks: [
+      { label: "Find Materials", page: "materials" },
+      { label: "My Products", page: "myproducts" },
+      { label: "Create Product", page: "createproduct" },
+      { label: "Marketplace", page: "marketplace" }
+    ],
+    footerExploreLinks: [
+      { label: "Recyclers", page: "recyclers" },
+      { label: "Industries", page: "industry_demand" },
+      { label: "Buyers", page: "marketplace" }
+    ],
+    footerAccountLinks: [
+      { label: "Profile", page: "profile" },
+      { label: "Activity", page: "activity" },
+      { label: "Switch Role", action: "openRoleSelectionModal()" }
+    ]
+  },
+  buyer: {
+    nav: [
+      { label: 'Marketplace', page: 'marketplace' },
+      { label: 'Categories', page: 'categories' },
+      { label: 'Saved Items', page: 'saved_items' },
+      { label: 'My Purchases', page: 'purchases' },
+      { label: 'Activity', page: 'activity' }
+    ],
+    dropdown: [
+      { label: '👤 My Profile', page: 'profile' },
+      { label: '❤️ Saved Items', page: 'saved_items' },
+      { label: '🛍️ Purchases', page: 'purchases' },
+      { label: '⚡ Activity', page: 'activity' }
+    ],
+    headline: "Discover useful, handmade and upcycled products.",
+    subhead: "Shop unique upcycled creations, reclaimed goods, and sustainable products from local makers.",
+    actions: [
+      { label: "🛒 Browse Marketplace", action: "navigateTo('marketplace')", primary: true },
+      { label: "❤️ View Saved Items", action: "navigateTo('saved_items')", primary: true },
+      { label: "🛍️ View Purchases", action: "navigateTo('purchases')", primary: true }
+    ],
+    footerColTitle: "Shop",
+    footerColLinks: [
+      { label: "Marketplace", page: "marketplace" },
+      { label: "Categories", page: "categories" },
+      { label: "Handmade", page: "marketplace" },
+      { label: "Upcycled", page: "marketplace" }
+    ],
+    footerExploreLinks: [
+      { label: "Makers", page: "makers" },
+      { label: "Recyclers", page: "recyclers" },
+      { label: "Industries", page: "materials" }
+    ],
+    footerAccountLinks: [
+      { label: "Profile", page: "profile" },
+      { label: "Saved Items", page: "saved_items" },
+      { label: "Activity", page: "activity" },
+      { label: "Switch Role", action: "openRoleSelectionModal()" }
+    ]
+  }
+};
+
 function selectRole(role) {
   currentRole = role;
   localStorage.setItem('reloopRole', role);
@@ -386,7 +639,7 @@ function selectRole(role) {
   closeRoleModal();
   applyRoleUI();
   navigateTo('dashboard');
-  showToast(`Logged in as ${MOCK_PROFILES[role].name}`, 'success');
+  showToast(`Logged in as ${MOCK_PROFILES[role].name} (${MOCK_PROFILES[role].roleLabel})`, 'success');
 }
 
 function logout() {
@@ -414,132 +667,556 @@ function applyRoleUI() {
   const infoEl = document.getElementById('navUserArea');
   const btnEl = document.getElementById('nav-get-started');
   const heroActions = document.getElementById('heroActions');
+  const navLinksContainer = document.getElementById('navLinks');
+  const dropdownBodyContainer = document.getElementById('dropdownBody');
   
-  if (isLoggedIn) {
-    if (infoEl) infoEl.style.display = 'block';
-    if (btnEl) btnEl.style.display = 'none';
-    if (heroActions) heroActions.innerHTML = `<button class="btn btn-primary btn-lg" onclick="navigateTo('dashboard')">Continue to Dashboard →</button>`;
-    
-    // Update profile dropdown and avatar
-    const profile = MOCK_PROFILES[currentRole];
-    if (profile) {
-      document.getElementById('navAvatarInitials').textContent = profile.initials;
-      document.getElementById('navUserName').textContent = profile.name + ' ▼';
-      document.getElementById('dropdownName').textContent = profile.name;
-      document.getElementById('dropdownRole').textContent = profile.roleLabel;
-    }
-  } else {
+  if (!isLoggedIn) {
     if (infoEl) infoEl.style.display = 'none';
     if (btnEl) btnEl.style.display = 'block';
-    if (heroActions) heroActions.innerHTML = `<button class="btn btn-primary btn-lg" onclick="openRoleSelectionModal()">Get Started →</button><button class="btn btn-secondary btn-lg" onclick="document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'})">See How It Works</button>`;
-  }
-
-  // Update Navigation based on role / logged in state
-  const showNav = (id, show) => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = show ? 'block' : 'none';
-  };
-
-  if (!isLoggedIn) {
-    showNav('nav-materials-link', true);
-    showNav('nav-makers-link', true);
-    showNav('nav-recyclers-link', true);
-    showNav('nav-mylistings-link', false);
-    showNav('dropdown-listings', false);
+    if (heroActions) heroActions.innerHTML = `
+      <button class="btn btn-primary btn-lg" onclick="openRoleSelectionModal()">Get Started →</button>
+      <button class="btn btn-secondary btn-lg" onclick="document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'})">See How It Works</button>
+    `;
+    
+    // Guest Landing Navbar
+    if (navLinksContainer) {
+      navLinksContainer.innerHTML = `
+        <a href="#" class="nav-link ${currentPage==='home'?'active':''}" data-page="home" onclick="navigateTo('home', event)">How It Works</a>
+        <a href="#" class="nav-link ${currentPage==='marketplace'?'active':''}" data-page="marketplace" onclick="navigateTo('marketplace', event)">Marketplace</a>
+        <a href="#" class="nav-link ${currentPage==='materials'?'active':''}" data-page="materials" onclick="navigateTo('materials', event)">Materials</a>
+        <a href="#" class="nav-link ${currentPage==='makers'?'active':''}" data-page="makers" onclick="navigateTo('makers', event)">Makers</a>
+        <a href="#" class="nav-link ${currentPage==='recyclers'?'active':''}" data-page="recyclers" onclick="navigateTo('recyclers', event)">Recyclers</a>
+      `;
+    }
   } else {
-    if (currentRole === 'individual') {
-      showNav('nav-materials-link', false);
-      showNav('nav-makers-link', false);
-      showNav('nav-recyclers-link', false);
-      showNav('nav-mylistings-link', true);
-      showNav('dropdown-listings', true);
-    } else if (currentRole === 'recycler') {
-      showNav('nav-materials-link', true);
-      showNav('nav-makers-link', false);
-      showNav('nav-recyclers-link', true);
-      showNav('nav-mylistings-link', false);
-      showNav('dropdown-listings', false);
-    } else if (currentRole === 'industry') {
-      showNav('nav-materials-link', true);
-      showNav('nav-makers-link', true);
-      showNav('nav-recyclers-link', true);
-      showNav('nav-mylistings-link', false);
-      showNav('dropdown-listings', false);
-    } else if (currentRole === 'maker') {
-      showNav('nav-materials-link', true);
-      showNav('nav-makers-link', true);
-      showNav('nav-recyclers-link', false);
-      showNav('nav-mylistings-link', true);
-      showNav('dropdown-listings', true);
-    } else if (currentRole === 'buyer') {
-      showNav('nav-materials-link', false);
-      showNav('nav-makers-link', true);
-      showNav('nav-recyclers-link', false);
-      showNav('nav-mylistings-link', false);
-      showNav('dropdown-listings', false);
+    if (infoEl) infoEl.style.display = 'block';
+    if (btnEl) btnEl.style.display = 'none';
+    if (heroActions) heroActions.innerHTML = `
+      <button class="btn btn-primary btn-lg" onclick="navigateTo('dashboard')">Continue to Dashboard →</button>
+    `;
+
+    const config = ROLE_CONFIG[currentRole] || ROLE_CONFIG.individual;
+    const profile = MOCK_PROFILES[currentRole];
+
+    if (profile) {
+      const avatarEl = document.getElementById('navAvatarInitials');
+      const userEl = document.getElementById('navUserName');
+      const dropNameEl = document.getElementById('dropdownName');
+      const dropRoleEl = document.getElementById('dropdownRole');
+      if (avatarEl) avatarEl.textContent = profile.initials;
+      if (userEl) userEl.textContent = profile.name + ' ▼';
+      if (dropNameEl) dropNameEl.textContent = profile.name;
+      if (dropRoleEl) dropRoleEl.textContent = profile.roleLabel;
+    }
+
+    // Dynamic Role Navbar
+    if (navLinksContainer) {
+      navLinksContainer.innerHTML = config.nav.map(item => `
+        <a href="#" class="nav-link ${currentPage===item.page?'active':''}" data-page="${item.page}" onclick="navigateTo('${item.page}', event)">${item.label}</a>
+      `).join('');
+    }
+
+    // Dynamic Profile Dropdown
+    if (dropdownBodyContainer) {
+      dropdownBodyContainer.innerHTML = `
+        ${config.dropdown.map(item => `
+          <a href="#" onclick="navigateTo('${item.page}', event)">${item.label}</a>
+        `).join('')}
+        <div class="dropdown-divider"></div>
+        <a href="#" onclick="openRoleSelectionModal()">🔄 Switch Role</a>
+        <a href="#" onclick="logout()" style="color:var(--text-muted)">🚪 Logout</a>
+      `;
     }
   }
+
+  // Render Footer according to current role
+  renderFooter();
+}
+
+function renderFooter() {
+  const footerEl = document.getElementById('appFooter');
+  if (!footerEl) return;
+
+  const isLoggedIn = localStorage.getItem('reloopLoggedIn') === 'true';
+
+  if (!isLoggedIn) {
+    footerEl.innerHTML = `
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3><span style="color:var(--accent-emerald)">↻</span> ReLoop</h3>
+          <p>Give Things a Second Life.</p>
+        </div>
+        <div class="footer-links">
+          <a href="#" onclick="navigateTo('home'); document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'}); return false;">How It Works</a>
+          <a href="#" onclick="navigateTo('marketplace', event)">Marketplace</a>
+          <a href="#" onclick="navigateTo('materials', event)">Materials</a>
+          <a href="#" onclick="navigateTo('makers', event)">Makers</a>
+          <a href="#" onclick="navigateTo('recyclers', event)">Recyclers</a>
+        </div>
+        <div>
+          <button class="btn btn-primary" onclick="openRoleSelectionModal()">Join the Ecosystem →</button>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        Built with Google Gemini AI | ReLoop Hackathon MVP 2026
+      </div>
+    `;
+    return;
+  }
+
+  const config = ROLE_CONFIG[currentRole] || ROLE_CONFIG.individual;
+
+  const renderLink = (item) => {
+    if (item.action) {
+      return `<a href="#" onclick="${item.action}; return false;">${item.label}</a>`;
+    }
+    return `<a href="#" onclick="navigateTo('${item.page}', event)">${item.label}</a>`;
+  };
+
+  footerEl.innerHTML = `
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <h3><span style="color:var(--accent-emerald)">↻</span> ReLoop</h3>
+        <p>Give Things a Second Life.</p>
+        <div style="margin-top:0.75rem; font-size:0.85rem; color:var(--text-muted);">
+          Logged in as: <strong style="color:var(--accent-emerald)">${MOCK_PROFILES[currentRole].roleLabel}</strong>
+        </div>
+      </div>
+
+      <div class="footer-links">
+        <h4 style="color:var(--text-primary); font-size:0.95rem; margin-bottom:0.75rem;">${config.footerColTitle}</h4>
+        ${config.footerColLinks.map(renderLink).join('')}
+      </div>
+
+      <div class="footer-links">
+        <h4 style="color:var(--text-primary); font-size:0.95rem; margin-bottom:0.75rem;">Explore</h4>
+        ${config.footerExploreLinks.map(renderLink).join('')}
+      </div>
+
+      <div class="footer-links">
+        <h4 style="color:var(--text-primary); font-size:0.95rem; margin-bottom:0.75rem;">Account</h4>
+        ${config.footerAccountLinks.map(renderLink).join('')}
+      </div>
+    </div>
+    <div class="footer-bottom" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+      <span>Powered by <strong>Google Gemini AI</strong> | Circular Economy Platform</span>
+      <button class="btn btn-secondary btn-sm" onclick="openRoleSelectionModal()">🔄 Switch Role</button>
+    </div>
+  `;
 }
 
 function renderDashboard() {
   const profile = MOCK_PROFILES[currentRole];
-  if(!profile) return;
-  document.getElementById('dashboardGreeting').innerHTML = `Good afternoon, ${profile.name.split(' ')[0]} 👋`;
-  
-  const grid = document.getElementById('dashboardSummaryGrid');
-  grid.innerHTML = profile.summaryStats.map(s => `
-    <div class="summary-card">
-      <h4>${s.label}</h4>
-      <div class="val">${s.value}</div>
-    </div>
-  `).join('');
+  const config = ROLE_CONFIG[currentRole] || ROLE_CONFIG.individual;
+  if (!profile) return;
 
-  const actions = document.getElementById('dashboardActionsGrid');
-  let actionHtml = '';
-  if (currentRole === 'individual') {
-    actionHtml = `<button class="btn btn-primary" onclick="navigateTo('analyze')">🔬 Analyze Item</button><button class="btn btn-secondary" onclick="navigateTo('marketplace')">🛒 Browse Marketplace</button>`;
-  } else if (currentRole === 'recycler') {
-    actionHtml = `<button class="btn btn-primary" onclick="navigateTo('materials')">🏭 View Material Requests</button>`;
-  } else if (currentRole === 'industry') {
-    actionHtml = `<button class="btn btn-primary" onclick="navigateTo('recyclers')">♻️ Find Suppliers</button>`;
-  } else if (currentRole === 'maker') {
-    actionHtml = `<button class="btn btn-primary" onclick="navigateTo('marketplace')">🛒 Find Materials</button>`;
-  } else if (currentRole === 'buyer') {
-    actionHtml = `<button class="btn btn-primary" onclick="navigateTo('marketplace')">🛒 Browse Products</button>`;
+  const greetingEl = document.getElementById('dashboardGreeting');
+  const subheadEl = document.getElementById('dashboardSubhead');
+  
+  if (greetingEl) greetingEl.innerHTML = `${profile.name.split(' ')[0]} 👋`;
+  if (subheadEl) subheadEl.textContent = config.headline;
+
+  const grid = document.getElementById('dashboardSummaryGrid');
+  if (grid) {
+    grid.innerHTML = profile.summaryStats.map(s => `
+      <div class="summary-card">
+        <h4>${s.label}</h4>
+        <div class="val">${s.value}</div>
+      </div>
+    `).join('');
   }
-  actions.innerHTML = actionHtml;
+
+  const actionsGrid = document.getElementById('dashboardActionsGrid');
+  if (actionsGrid) {
+    actionsGrid.innerHTML = config.actions.map(a => `
+      <button class="btn ${a.primary ? 'btn-primary' : 'btn-secondary'}" onclick="${a.action}">
+        ${a.label}
+      </button>
+    `).join('');
+  }
 }
 
 function renderProfile() {
   const profile = MOCK_PROFILES[currentRole];
-  if(!profile) return;
-  document.getElementById('profileAvatar').textContent = profile.initials;
-  document.getElementById('profileName').textContent = profile.name;
-  document.getElementById('profileRoleBadge').textContent = profile.roleLabel;
-  document.getElementById('profileLocation').textContent = `📍 ${profile.location}`;
-  document.getElementById('profileJoined').textContent = `📅 Member since ${profile.memberSince}`;
+  if (!profile) return;
   
-  document.getElementById('profileStatsGrid').innerHTML = profile.stats.map(s => `
-    <div class="summary-card">
-      <h4>${s.label}</h4>
-      <div class="val">${s.value}</div>
-    </div>
-  `).join('');
+  const avatarEl = document.getElementById('profileAvatar');
+  const nameEl = document.getElementById('profileName');
+  const badgeEl = document.getElementById('profileRoleBadge');
+  const locEl = document.getElementById('profileLocation');
+  const joinedEl = document.getElementById('profileJoined');
+
+  if (avatarEl) avatarEl.textContent = profile.initials;
+  if (nameEl) nameEl.textContent = profile.name;
+  if (badgeEl) badgeEl.textContent = profile.roleLabel;
+  if (locEl) locEl.textContent = `📍 ${profile.location}`;
+  if (joinedEl) joinedEl.textContent = `📅 Member since ${profile.memberSince}`;
+
+  const titleEl = document.getElementById('profileStatsTitle');
+  if (titleEl) titleEl.textContent = `${profile.roleLabel} Profile & Key Metrics`;
+
+  const grid = document.getElementById('profileStatsGrid');
+  if (grid) {
+    grid.innerHTML = profile.stats.map(s => `
+      <div class="summary-card">
+        <h4>${s.label}</h4>
+        <div class="val">${s.value}</div>
+      </div>
+    `).join('');
+  }
 }
 
 function renderActivity() {
   const profile = MOCK_PROFILES[currentRole];
-  if(!profile) return;
-  document.getElementById('activityTimeline').innerHTML = profile.activities.map(a => `
-    <div class="activity-item">
-      <div class="activity-icon">${a.icon}</div>
-      <div class="activity-content">
-        <div class="activity-time">${a.time}</div>
-        <div class="activity-desc">${a.action} <span class="activity-detail">${a.detail || a.type}</span></div>
+  if (!profile) return;
+  const container = document.getElementById('activityTimeline');
+  if (container) {
+    container.innerHTML = profile.activities.map(a => `
+      <div class="activity-item">
+        <div class="activity-icon">${a.icon}</div>
+        <div class="activity-content">
+          <div class="activity-time">${a.time}</div>
+          <div class="activity-desc">${a.action} <span class="activity-detail">${a.detail || a.type}</span></div>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+// Render Collection Requests view
+function renderCollection() {
+  const container = document.getElementById('collectionContent');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="card" style="margin-bottom:1.5rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1rem;">
+        <h3>Active Pickup & Collection Requests</h3>
+        ${currentRole === 'individual' ? `<button class="btn btn-primary btn-sm" onclick="showToast('New collection request scheduled!', 'success')">➕ Request New Pickup</button>` : ''}
+      </div>
+      <div class="table-responsive">
+        <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.95rem;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border-light); color:var(--text-secondary);">
+              <th style="padding:0.75rem;">Item</th>
+              <th style="padding:0.75rem;">Quantity</th>
+              <th style="padding:0.75rem;">Location</th>
+              <th style="padding:0.75rem;">Recycler</th>
+              <th style="padding:0.75rem;">Status</th>
+              <th style="padding:0.75rem;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${MOCK_COLLECTION_REQUESTS.map(req => `
+              <tr style="border-bottom:1px solid var(--border-light);">
+                <td style="padding:0.75rem; font-weight:600;"><span class="emoji">${req.emoji}</span> ${req.item}</td>
+                <td style="padding:0.75rem;">${req.qty}</td>
+                <td style="padding:0.75rem;">${req.location}</td>
+                <td style="padding:0.75rem; color:var(--accent-emerald);">${req.recycler}</td>
+                <td style="padding:0.75rem;">
+                  <span class="badge ${req.status==='Completed'?'badge-primary':'badge-secondary'}">${req.status}</span>
+                </td>
+                <td style="padding:0.75rem;">
+                  ${currentRole === 'recycler' && req.status === 'Pending Pickup' 
+                    ? `<button class="btn btn-primary btn-sm" onclick="req.status='Accepted'; renderCollection(); showToast('Pickup accepted!', 'success')">Accept</button>`
+                    : `<button class="btn btn-secondary btn-sm" onclick="showToast('Collection details opened', 'info')">Details</button>`}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
       </div>
     </div>
-  `).join('');
+  `;
 }
+
+// Render Recycler's Accepted Materials view
+function renderMyMaterials() {
+  const container = document.getElementById('myMaterialsContent');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="card" style="margin-bottom:1.5rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+        <h3>Accepted Waste & Recovery Streams</h3>
+        <button class="btn btn-primary btn-sm" onclick="showToast('New material stream added', 'success')">➕ Add Accepted Material</button>
+      </div>
+      <div class="listings-grid" style="grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));">
+        <div class="listing-card card">
+          <div class="listing-header"><span class="emoji">🍾</span> <h4>PET Plastic Bottles</h4></div>
+          <p style="color:var(--text-secondary); font-size:0.9rem; margin:0.5rem 0;">Min quantity: 5 kg | Clean, sorted</p>
+          <span class="badge badge-primary">Active Accepting</span>
+        </div>
+        <div class="listing-card card">
+          <div class="listing-header"><span class="emoji">📦</span> <h4>Cardboard & Paper</h4></div>
+          <p style="color:var(--text-secondary); font-size:0.9rem; margin:0.5rem 0;">Min quantity: 10 kg | Baled paper</p>
+          <span class="badge badge-primary">Active Accepting</span>
+        </div>
+        <div class="listing-card card">
+          <div class="listing-header"><span class="emoji">⚙️</span> <h4>Aluminum Scrap</h4></div>
+          <p style="color:var(--text-secondary); font-size:0.9rem; margin:0.5rem 0;">Min quantity: 20 kg | Cans & sheet</p>
+          <span class="badge badge-primary">Active Accepting</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Render Industry Demand & Requirements view
+function renderIndustryDemand() {
+  const container = document.getElementById('industryDemandContent');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+      <h3>Sourcing Requirements</h3>
+      ${currentRole === 'industry' ? `<button class="btn btn-primary" onclick="openPostRequirementModal()">📢 Post Requirement</button>` : ''}
+    </div>
+    <div class="listings-grid">
+      ${MOCK_INDUSTRY_REQUIREMENTS.map(req => `
+        <div class="listing-card card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem;">
+            <div>
+              <h3 style="margin-bottom:0.25rem;"><span class="emoji">${req.emoji}</span> ${req.material}</h3>
+              <small style="color:var(--accent-cyan); font-weight:600;">${req.company}</small>
+            </div>
+            <span class="badge badge-primary">${req.status}</span>
+          </div>
+          <p style="color:var(--text-secondary); font-size:0.95rem; margin-bottom:0.75rem;">Seeking: <strong>${req.quantity}</strong> @ <strong>${req.price}</strong></p>
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; color:var(--text-muted);">
+            <span>📍 ${req.location}</span>
+            <button class="btn btn-secondary btn-sm" onclick="showToast('Inquiry sent to ${req.company}', 'success')">🤝 Offer Supply</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// Render Suppliers view
+function renderSuppliers() {
+  const container = document.getElementById('suppliersContent');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="listings-grid">
+      ${MOCK_RECYCLERS.map(rec => `
+        <div class="listing-card card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem;">
+            <div>
+              <h3><span class="emoji">${rec.emoji}</span> ${rec.name}</h3>
+              <small style="color:var(--accent-emerald);">📍 ${rec.area}</small>
+            </div>
+            <span class="badge badge-primary">⭐ ${rec.rating}</span>
+          </div>
+          <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:0.75rem;">${rec.description}</p>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+            ${rec.materials.map(m => `<span class="badge badge-secondary" style="font-size:0.75rem;">${m}</span>`).join('')}
+          </div>
+          <button class="btn btn-primary btn-sm" style="width:100%;" onclick="showToast('Connected with ${rec.name}', 'success')">🤝 Connect Supplier</button>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// Render Requests view
+function renderRequests() {
+  const container = document.getElementById('requestsContent');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="card">
+      <h3 style="margin-bottom:1rem;">Incoming Material Inquiries</h3>
+      <p style="color:var(--text-secondary); margin-bottom:1.5rem;">Review offers and inquiries from buyers and industry partners.</p>
+      <div class="activity-timeline">
+        <div class="activity-item">
+          <div class="activity-icon">📩</div>
+          <div class="activity-content">
+            <div class="activity-time">2 hours ago</div>
+            <div class="activity-desc">Bulk PET Plastic Offer from <span class="activity-detail">GreenCycle BD</span> (500 kg)</div>
+            <button class="btn btn-primary btn-sm" style="margin-top:0.5rem;" onclick="showToast('Offer accepted!', 'success')">Accept Offer</button>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon">💬</div>
+          <div class="activity-content">
+            <div class="activity-time">Yesterday</div>
+            <div class="activity-desc">Inquiry regarding <span class="activity-detail">Aluminum Scrap pricing</span></div>
+            <button class="btn btn-secondary btn-sm" style="margin-top:0.5rem;" onclick="showToast('Reply sent', 'info')">Reply</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Render Maker Products view
+function renderMyProducts() {
+  const container = document.getElementById('myProductsContent');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+      <h3>Handmade & Upcycled Catalog</h3>
+      <button class="btn btn-primary" onclick="openCreateListingModal()">🎨 Add New Product</button>
+    </div>
+    <div class="listings-grid">
+      ${MOCK_MAKER_PRODUCTS.map(p => `
+        <div class="listing-card card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem;">
+            <h3><span class="emoji">${p.emoji}</span> ${p.title}</h3>
+            <span class="badge badge-primary">৳ ${p.price}</span>
+          </div>
+          <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:0.75rem;">Category: ${p.category} | Sales: ${p.sales} units</p>
+          <div style="display:flex; gap:0.5rem;">
+            <button class="btn btn-secondary btn-sm" onclick="showToast('Product editing opened', 'info')">✏️ Edit</button>
+            <button class="btn btn-secondary btn-sm" onclick="showToast('Product removed', 'info')">🗑️ Remove</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// Render Saved Items view
+function renderSavedItems() {
+  const container = document.getElementById('savedItemsContent');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="listings-grid">
+      ${MOCK_SAVED_ITEMS.map(item => `
+        <div class="listing-card card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem;">
+            <h3><span class="emoji">${item.emoji}</span> ${item.title}</h3>
+            <span class="badge badge-primary">৳ ${item.price}</span>
+          </div>
+          <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:0.75rem;">Seller: ${item.seller} | 📍 ${item.location}</p>
+          <div style="display:flex; gap:0.5rem;">
+            <button class="btn btn-primary btn-sm" onclick="showToast('Listing opened', 'info')">View Listing</button>
+            <button class="btn btn-secondary btn-sm" onclick="showToast('Item removed from saved', 'info')">Unsave</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// Render Purchases view
+function renderPurchases() {
+  const container = document.getElementById('purchasesContent');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="card">
+      <h3 style="margin-bottom:1rem;">Your Order History</h3>
+      <div class="table-responsive">
+        <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.95rem;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border-light); color:var(--text-secondary);">
+              <th style="padding:0.75rem;">Product</th>
+              <th style="padding:0.75rem;">Date</th>
+              <th style="padding:0.75rem;">Price</th>
+              <th style="padding:0.75rem;">Seller</th>
+              <th style="padding:0.75rem;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${MOCK_PURCHASES.map(p => `
+              <tr style="border-bottom:1px solid var(--border-light);">
+                <td style="padding:0.75rem; font-weight:600;"><span class="emoji">${p.emoji}</span> ${p.title}</td>
+                <td style="padding:0.75rem;">${p.date}</td>
+                <td style="padding:0.75rem; font-weight:600; color:var(--accent-emerald);">৳ ${p.price}</td>
+                <td style="padding:0.75rem;">${p.seller}</td>
+                <td style="padding:0.75rem;"><span class="badge badge-primary">${p.status}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// Render Categories view
+function renderCategories() {
+  const container = document.getElementById('categoriesContent');
+  if (!container) return;
+
+  const cats = [
+    { name: "Plastic & Polymer", emoji: "🍾", count: "42 items", desc: "PET, HDPE, bottles, containers" },
+    { name: "Reclaimed Wood", emoji: "🪑", count: "28 items", desc: "Furniture, pallets, timber scraps" },
+    { name: "Textiles & Denim", emoji: "🎒", count: "35 items", desc: "Fabric scraps, old denim, clothes" },
+    { name: "Metal Scrap", emoji: "⚙️", count: "19 items", desc: "Aluminum cans, tin, steel wire" },
+    { name: "Glass Bottles", emoji: "🫙", count: "14 items", desc: "Glass jars, wine bottles, broken glass" },
+    { name: "E-Waste & Electronics", emoji: "💻", count: "22 items", desc: "Phones, circuit boards, cables" },
+    { name: "Paper & Cardboard", emoji: "📦", count: "31 items", desc: "Boxes, packaging, newspapers" },
+    { name: "Handmade Crafts", emoji: "🎨", count: "50 items", desc: "Upcycled decor, tote bags, art" }
+  ];
+
+  container.innerHTML = `
+    <div class="listings-grid" style="grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));">
+      ${cats.map(c => `
+        <div class="listing-card card" style="cursor:pointer;" onclick="navigateTo('marketplace')">
+          <div style="font-size:2.5rem; margin-bottom:0.5rem;">${c.emoji}</div>
+          <h3>${c.name}</h3>
+          <p style="color:var(--accent-emerald); font-size:0.85rem; margin:0.25rem 0;">${c.count}</p>
+          <p style="color:var(--text-secondary); font-size:0.85rem;">${c.desc}</p>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// Helper modal for Industry to post material requirement
+function openPostRequirementModal() {
+  const modalTitle = document.getElementById('modalTitle');
+  const modalBody = document.getElementById('modalBody');
+  if (!modalTitle || !modalBody) return;
+
+  modalTitle.textContent = "📢 Post Material Requirement";
+  modalBody.innerHTML = `
+    <form onsubmit="event.preventDefault(); submitIndustryReq();">
+      <div class="form-group" style="margin-bottom:1rem;">
+        <label>Material Name</label>
+        <input type="text" id="reqMat" required placeholder="e.g. PET Plastic Bottles">
+      </div>
+      <div class="form-group" style="margin-bottom:1rem;">
+        <label>Monthly Quantity Needed</label>
+        <input type="text" id="reqQty" required placeholder="e.g. 500 kg/month">
+      </div>
+      <div class="form-group" style="margin-bottom:1rem;">
+        <label>Target Price</label>
+        <input type="text" id="reqPrice" required placeholder="e.g. ৳ 45/kg">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%; margin-top:1rem;">📢 Post Requirement</button>
+    </form>
+  `;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function submitIndustryReq() {
+  const material = document.getElementById('reqMat').value;
+  const quantity = document.getElementById('reqQty').value;
+  const price = document.getElementById('reqPrice').value;
+  
+  MOCK_INDUSTRY_REQUIREMENTS.unshift({
+    id: Date.now(),
+    company: MOCK_PROFILES.industry.name,
+    material,
+    quantity,
+    price,
+    location: MOCK_PROFILES.industry.location,
+    status: "Actively Sourcing",
+    emoji: "🏭"
+  });
+
+  closeModal();
+  renderIndustryDemand();
+  showToast('Material requirement posted!', 'success');
+}
+
 
 // Initial UI setup
 applyRoleUI();

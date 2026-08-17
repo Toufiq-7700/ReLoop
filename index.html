@@ -47,14 +47,8 @@
           <div class="dropdown-name" id="dropdownName">Toufiq Khan</div>
           <div class="dropdown-role" id="dropdownRole">Individual</div>
         </div>
-        <div class="dropdown-body">
-          <a href="#" onclick="navigateTo('profile', event)">👤 Profile</a>
-          <a href="#" onclick="navigateTo('activity', event)">⚡ My Activity</a>
-          <a href="#" onclick="navigateTo('mylistings', event)" id="dropdown-listings">📋 My Listings</a>
-          <a href="#" onclick="showToast('Settings demo', 'info')">⚙️ Settings</a>
-          <div class="dropdown-divider"></div>
-          <a href="#" onclick="openRoleSelectionModal()">🔄 Switch Role</a>
-          <a href="#" onclick="logout()" style="color:var(--text-muted)">🚪 Logout</a>
+        <div class="dropdown-body" id="dropdownBody">
+          <!-- JS rendered dropdown links -->
         </div>
       </div>
     </div>
@@ -213,31 +207,13 @@
         <button class="btn btn-primary btn-lg" onclick="openRoleSelectionModal()">Get Started →</button>
       </div>
     </div>
-
-    <!-- Footer -->
-    <footer class="landing-footer">
-      <div class="footer-grid">
-        <div class="footer-brand">
-          <h3><span style="color:var(--accent-emerald)">↻</span> ReLoop</h3>
-          <p>Give Things a Second Life.</p>
-        </div>
-        <div class="footer-links">
-          <a href="#" onclick="document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'}); return false;">How It Works</a>
-          <a href="#" onclick="navigateTo('marketplace')">Marketplace</a>
-          <a href="#" onclick="openRoleSelectionModal()">Join the Ecosystem</a>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        Built with Google Gemini AI | Hackathon MVP 2026
-      </div>
-    </footer>
   </section>
 
   <!-- ═══ DASHBOARD PAGE ═══ -->
   <section class="page-section" id="page-dashboard">
     <div class="page-header" style="text-align:left; max-width:1000px; margin:0 auto; padding-top:2rem;">
-      <h1 style="font-size:2rem;" id="dashboardGreeting">Good afternoon, Demo 👋</h1>
-      <p style="font-size:1.1rem;">Here's what's happening in your ReLoop account.</p>
+      <h1 style="font-size:2rem;" id="dashboardGreeting">Good afternoon 👋</h1>
+      <p style="font-size:1.1rem;" id="dashboardSubhead">Here's what's happening in your ReLoop account.</p>
     </div>
     <div class="page-body container" style="max-width:1000px;">
       <div class="dashboard-summary-grid" id="dashboardSummaryGrid">
@@ -255,20 +231,20 @@
     <div class="page-header">
       <h1>My Profile</h1>
     </div>
-    <div class="page-body container" style="max-width:800px;">
+    <div class="page-body container" style="max-width:850px;">
       <div class="card" style="display:flex; gap:2rem; align-items:center; margin-bottom:2rem;">
         <div class="avatar-circle-large" id="profileAvatar">TK</div>
         <div>
           <h2 style="font-size:2rem; margin-bottom:0.25rem;" id="profileName">Toufiq Khan</h2>
-          <div style="display:flex; gap:1rem; color:var(--text-secondary); font-size:0.95rem;">
+          <div style="display:flex; gap:1rem; color:var(--text-secondary); font-size:0.95rem; flex-wrap:wrap;">
             <span id="profileRoleBadge" class="badge badge-primary">Individual</span>
             <span id="profileLocation">📍 Dhaka, Bangladesh</span>
             <span id="profileJoined">📅 Member since August 2026</span>
           </div>
         </div>
       </div>
-      <h3 style="margin-bottom:1.5rem; color:var(--text-secondary);">Statistics</h3>
-      <div class="impact-grid" id="profileStatsGrid" style="grid-template-columns:repeat(2,1fr);">
+      <h3 style="margin-bottom:1.5rem; color:var(--text-secondary);" id="profileStatsTitle">Statistics & Key Metadata</h3>
+      <div class="impact-grid" id="profileStatsGrid" style="grid-template-columns:repeat(2,1fr); margin-bottom:2rem;">
         <!-- JS rendered -->
       </div>
     </div>
@@ -277,7 +253,7 @@
   <!-- ═══ ACTIVITY PAGE ═══ -->
   <section class="page-section" id="page-activity">
     <div class="page-header">
-      <h1>⚡ My Activity</h1>
+      <h1>⚡ Activity Log</h1>
       <p>Recent actions in your ecosystem.</p>
     </div>
     <div class="page-body container" style="max-width:800px;">
@@ -309,73 +285,93 @@
           </div>
           <div style="display:flex; gap:1rem; margin-top:1.5rem; flex-wrap:wrap;">
             <button class="btn btn-primary btn-lg" id="analyzeBtn" onclick="analyzeItem()">🤖 Analyze with Gemini</button>
-            <button class="btn btn-secondary" id="clearBtn" onclick="clearAnalysis()">Clear</button>
           </div>
         </div>
-        
-        <div class="card">
-          <h3 style="margin-bottom:1rem; font-size:1.1rem; color:var(--text-secondary);">⚡ Try a Demo Item</h3>
-          <div style="display:flex; gap:1rem; flex-wrap:wrap;" id="demoPresetsGrid"></div>
+
+        <h3 style="margin-bottom:1rem; color:var(--text-secondary);">Or try a demo item</h3>
+        <div class="demo-presets-grid" id="demoPresetsGrid">
+          <!-- JS rendered presets -->
         </div>
       </div>
 
       <!-- Loading State -->
-      <div class="loading-overlay" id="analyzeLoading" style="display:none;">
+      <div class="analyze-loading" id="analyzeLoading" style="display:none;">
         <div class="spinner"></div>
-        <h3 style="font-size:1.5rem; margin-bottom:0.5rem;">Gemini AI is analyzing...</h3>
-        <p style="color:var(--text-secondary)">Identifying materials, condition, and best next life.</p>
+        <p style="font-size:1.2rem; font-weight:600;">Gemini AI is analyzing your item...</p>
+        <small style="color:var(--text-muted)">Identifying material, condition, and circular opportunities...</small>
       </div>
 
-      <!-- Result -->
-      <div class="analyze-container" id="analyzeResult" style="display:none; max-width:800px;"></div>
+      <!-- Result State -->
+      <div class="analyze-result" id="analyzeResult" style="display:none;">
+        <!-- JS rendered analysis result -->
+      </div>
     </div>
   </section>
 
   <!-- ═══ MARKETPLACE ═══ -->
   <section class="page-section" id="page-marketplace">
     <div class="page-header">
-      <h1>🛒 Marketplace</h1>
-      <p>Discover reusable items, recyclable materials, and handmade upcycled products.</p>
+      <h1>🛒 Circular Marketplace</h1>
+      <p>Buy, sell, donate, or claim items and materials within the community.</p>
     </div>
     <div class="page-body container">
-      <div class="search-box">
-        <input type="text" id="marketplaceSearch" placeholder="Search items, materials, or products..." oninput="filterMarketplace()">
+      <div class="marketplace-toolbar">
+        <div class="search-box">
+          <input type="text" id="marketSearch" placeholder="Search items, materials, location..." oninput="filterMarketplace()">
+        </div>
+        <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="openCreateListingModal()" id="mktCreateBtn">➕ Create Listing</button>
+        </div>
       </div>
-      <div class="filter-tabs" id="filterTabs"></div>
-      <div class="listings-grid" id="listingsGrid"></div>
+      <div class="tabs" id="marketCategoryTabs">
+        <button class="tab active" onclick="filterMarketCategory('all', this)">All Items</button>
+        <button class="tab" onclick="filterMarketCategory('reusable', this)">Reusable</button>
+        <button class="tab" onclick="filterMarketCategory('recyclable', this)">Recyclable</button>
+        <button class="tab" onclick="filterMarketCategory('handmade', this)">Handmade / Upcycled</button>
+        <button class="tab" onclick="filterMarketCategory('donate', this)">Free / Donate</button>
+      </div>
+      <div class="listings-grid" id="marketplaceGrid">
+        <!-- JS rendered listings -->
+      </div>
     </div>
   </section>
 
   <!-- ═══ MATERIALS ═══ -->
   <section class="page-section" id="page-materials">
     <div class="page-header">
-      <h1>🏭 Materials Needed</h1>
-      <p>Industries and recyclers actively sourcing materials. Can you supply?</p>
+      <h1>📦 Materials Directory</h1>
+      <p>Industries, recyclers, and makers actively sourcing raw materials.</p>
     </div>
     <div class="page-body container">
-      <div class="entity-grid" id="materialsGrid"></div>
+      <div class="listings-grid" id="materialsGrid">
+        <!-- JS rendered materials -->
+      </div>
     </div>
   </section>
 
   <!-- ═══ MAKERS ═══ -->
   <section class="page-section" id="page-makers">
     <div class="page-header">
-      <h1>🎨 Handmade & Upcycled Makers</h1>
-      <p>Creative artisans turning waste into beautiful products.</p>
+      <h1>🎨 Upcyclers & Local Makers</h1>
+      <p>Talented craftspeople giving waste materials new life.</p>
     </div>
     <div class="page-body container">
-      <div class="entity-grid" id="makersGrid"></div>
+      <div class="listings-grid" id="makersGrid">
+        <!-- JS rendered makers -->
+      </div>
     </div>
   </section>
 
   <!-- ═══ RECYCLERS ═══ -->
   <section class="page-section" id="page-recyclers">
     <div class="page-header">
-      <h1>♻️ Recyclers & Collectors</h1>
-      <p>Find certified recyclers and waste collectors near you.</p>
+      <h1>♻️ Certified Recyclers</h1>
+      <p>Licensed facilities collecting and processing recyclable materials.</p>
     </div>
     <div class="page-body container">
-      <div class="entity-grid" id="recyclersGrid"></div>
+      <div class="listings-grid" id="recyclersGrid">
+        <!-- JS rendered recyclers -->
+      </div>
     </div>
   </section>
 
@@ -385,12 +381,116 @@
       <h1>📋 My Listings</h1>
       <p>Your items on the marketplace.</p>
     </div>
-    <div class="page-body container" style="max-width:800px;">
+    <div class="page-body container" style="max-width:850px;">
       <div id="myListingsContent"></div>
     </div>
   </section>
 
+  <!-- ═══ COLLECTION REQUESTS ═══ -->
+  <section class="page-section" id="page-collection">
+    <div class="page-header">
+      <h1>🚛 Waste Collection Requests</h1>
+      <p>Schedule pickups and manage recyclables collection.</p>
+    </div>
+    <div class="page-body container" style="max-width:900px;">
+      <div id="collectionContent"></div>
+    </div>
+  </section>
+
+  <!-- ═══ MY ACCEPTED MATERIALS ═══ -->
+  <section class="page-section" id="page-mymaterials">
+    <div class="page-header">
+      <h1>📦 Accepted & Managed Materials</h1>
+      <p>Define accepted waste streams and material collection thresholds.</p>
+    </div>
+    <div class="page-body container" style="max-width:900px;">
+      <div id="myMaterialsContent"></div>
+    </div>
+  </section>
+
+  <!-- ═══ INDUSTRY DEMAND & MATERIALS NEEDED ═══ -->
+  <section class="page-section" id="page-industry_demand">
+    <div class="page-header">
+      <h1>🏭 Industry Demand & Requirements</h1>
+      <p>Active material requirements posted by commercial manufacturers.</p>
+    </div>
+    <div class="page-body container" style="max-width:900px;">
+      <div id="industryDemandContent"></div>
+    </div>
+  </section>
+
+  <!-- ═══ SUPPLIERS ═══ -->
+  <section class="page-section" id="page-suppliers">
+    <div class="page-header">
+      <h1>🤝 Certified Material Suppliers</h1>
+      <p>Directory of verified scrap collectors and recyclers supplying bulk materials.</p>
+    </div>
+    <div class="page-body container" style="max-width:900px;">
+      <div id="suppliersContent"></div>
+    </div>
+  </section>
+
+  <!-- ═══ REQUESTS & OFFERS ═══ -->
+  <section class="page-section" id="page-requests">
+    <div class="page-header">
+      <h1>📩 Active Material Requests & Offers</h1>
+      <p>Incoming inquiries, material quotes, and bulk supply requests.</p>
+    </div>
+    <div class="page-body container" style="max-width:900px;">
+      <div id="requestsContent"></div>
+    </div>
+  </section>
+
+  <!-- ═══ MAKER PRODUCTS ═══ -->
+  <section class="page-section" id="page-myproducts">
+    <div class="page-header">
+      <h1>🎨 My Handcrafted & Upcycled Products</h1>
+      <p>Manage products created from reclaimed materials.</p>
+    </div>
+    <div class="page-body container" style="max-width:900px;">
+      <div id="myProductsContent"></div>
+    </div>
+  </section>
+
+  <!-- ═══ SAVED ITEMS ═══ -->
+  <section class="page-section" id="page-saved_items">
+    <div class="page-header">
+      <h1>❤️ Saved Items & Bookmarks</h1>
+      <p>Products, materials, and listings saved for quick access.</p>
+    </div>
+    <div class="page-body container" style="max-width:900px;">
+      <div id="savedItemsContent"></div>
+    </div>
+  </section>
+
+  <!-- ═══ PURCHASES & ORDERS ═══ -->
+  <section class="page-section" id="page-purchases">
+    <div class="page-header">
+      <h1>🛍️ My Purchases & Order History</h1>
+      <p>Track your circular purchases and upcycled orders.</p>
+    </div>
+    <div class="page-body container" style="max-width:900px;">
+      <div id="purchasesContent"></div>
+    </div>
+  </section>
+
+  <!-- ═══ CATEGORIES BROWSER ═══ -->
+  <section class="page-section" id="page-categories">
+    <div class="page-header">
+      <h1>🏷️ Marketplace Categories</h1>
+      <p>Explore sustainable products and materials by category.</p>
+    </div>
+    <div class="page-body container" style="max-width:900px;">
+      <div id="categoriesContent"></div>
+    </div>
+  </section>
+
 </main>
+
+<!-- ─── REUSABLE APP FOOTER ─── -->
+<footer class="landing-footer app-footer" id="appFooter">
+  <!-- Dynamic JS rendered footer -->
+</footer>
 
 <!-- ─── ROLE SELECTION MODAL ─── -->
 <div class="modal-overlay" id="roleModalOverlay" onclick="closeRoleModal(event)">

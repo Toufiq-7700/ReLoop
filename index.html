@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ReLoop — AI-powered circular marketplace connecting households, buyers, recyclers, industries, and makers. Give things a second life.">
+  <title>ReLoop — Give Things a Second Life</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♻️</text></svg>">
+</head>
+<body>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Mobile Sidebar Toggle -->
+<button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle navigation">☰</button>
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">♻️ Re<span>Loop</span></div>
+  <nav class="sidebar-nav" id="sidebarNav">
+    <a href="#" data-page="home" class="active" id="nav-home">🏠 Home</a>
+    <a href="#" data-page="analyze" id="nav-analyze">🔬 Analyze Item</a>
+    <a href="#" data-page="marketplace" id="nav-marketplace">🛒 Marketplace</a>
+    <a href="#" data-page="materials" id="nav-materials">🏭 Materials</a>
+    <a href="#" data-page="makers" id="nav-makers">🎨 Makers</a>
+    <a href="#" data-page="recyclers" id="nav-recyclers">♻️ Recyclers</a>
+    <a href="#" data-page="mylistings" id="nav-mylistings">📋 My Listings</a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="sidebar-user-avatar">D</div>
+    <div class="sidebar-user-info">
+      Demo User<br><small>Individual</small>
+    </div>
+  </div>
+</aside>
+
+<!-- ─── MAIN CONTENT ─── -->
+<main class="main-content" id="mainContent">
+
+  <!-- ═══ HOME PAGE ═══ -->
+  <section class="page-section active landing" id="page-home">
+    <div class="hero">
+      <div class="container">
+        <h1>Give Things a <em>Second Life.</em></h1>
+        <p>ReLoop connects unused products, recyclable materials, makers, collectors, industries, and buyers — using AI to find the best next destination for what you no longer need.</p>
+        <div class="hero-actions">
+          <button class="btn btn-primary btn-lg" onclick="navigateTo('analyze')" id="cta-analyze">🔬 Analyze My Item</button>
+          <button class="btn btn-secondary btn-lg" onclick="navigateTo('marketplace')" id="cta-marketplace" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff;">🛒 Explore Marketplace</button>
+        </div>
+        <div class="flow-visual">
+          <div class="flow-step">📦 Unused Item</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step highlight">🤖 Gemini AI</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">♻️ Reuse / Sell / Donate / Recycle / Upcycle</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">👤 New Owner / Recycler / Maker</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- How It Works -->
+    <div class="section">
+      <div class="container">
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-subtitle">Four simple steps to give your unused items a new purpose.</p>
+        <div class="steps-grid">
+          <div class="step-card card card-flat">
+            <div class="step-num">01</div>
+            <div class="step-icon">📸</div>
+            <h3>Snap It</h3>
+            <p>Upload a photo or describe your item.</p>
+          </div>
+          <div class="step-card card card-flat">
+            <div class="step-num">02</div>
+            <div class="step-icon">🤖</div>
+            <h3>Understand It</h3>
+            <p>Gemini identifies the material, condition, and possible uses.</p>
+          </div>
+          <div class="step-card card card-flat">
+            <div class="step-num">03</div>
+            <div class="step-icon">🔗</div>
+            <h3>Match It</h3>
+            <p>ReLoop finds relevant buyers, makers, recyclers, and industries.</p>
+          </div>
+          <div class="step-card card card-flat">
+            <div class="step-num">04</div>
+            <div class="step-icon">🌱</div>
+            <h3>Give It a Second Life</h3>
+            <p>Sell, donate, reuse, recycle, or upcycle.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Impact -->
+    <div class="section" style="background:#f9fafb;">
+      <div class="container">
+        <h2 class="section-title">Community Impact</h2>
+        <p class="section-subtitle">Together, we're making a difference.</p>
+        <div class="impact-grid" id="impactGrid"></div>
+        <p class="impact-note">* Demo/example metrics for illustration purposes only.</p>
+      </div>
+    </div>
+
+    <!-- Why Gemini -->
+    <div class="section">
+      <div class="container">
+        <div class="gemini-section">
+          <h2>🤖 Why Gemini?</h2>
+          <p>Gemini helps ReLoop understand what users have, interpret item images and descriptions, classify materials, generate marketplace listings, suggest reuse options, and connect people in the circular economy — making it effortless to give things a second life.</p>
+        </div>
+      </div>
+    </div>
+
+    <footer class="landing-footer">
+      <p>♻️ ReLoop — Give Things a Second Life. | Built with Gemini AI | Hackathon MVP 2026</p>
+    </footer>
+  </section>
+
+  <!-- ═══ ANALYZE PAGE ═══ -->
+  <section class="page-section" id="page-analyze">
+    <div class="page-header"><h1>🔬 Analyze Your Item</h1><p>Upload a photo or describe what you have — Gemini will figure out the rest.</p></div>
+    <div class="page-body">
+      <div class="analyze-container" id="analyzeInput">
+        <div class="card">
+          <div class="upload-zone" id="uploadZone" role="button" tabindex="0" aria-label="Upload image">
+            <div class="upload-zone-icon">📤</div>
+            <p>Drop an image here or <strong>click to upload</strong></p>
+            <small>JPG, PNG — max 5MB</small>
+            <input type="file" id="imageInput" accept="image/*" class="sr-only">
+            <img id="imagePreview" class="image-preview" alt="Preview" style="display:none;">
+          </div>
+          <div class="text-input-section">
+            <label for="itemDescription">Or describe your item</label>
+            <textarea id="itemDescription" placeholder='e.g. "I have 15 plastic bottles, some cardboard boxes and an old wooden chair."'></textarea>
+          </div>
+          <div class="analyze-actions">
+            <button class="btn btn-primary btn-lg" id="analyzeBtn" onclick="analyzeItem()">🤖 Analyze with Gemini</button>
+            <button class="btn btn-secondary" id="clearBtn" onclick="clearAnalysis()">Clear</button>
+          </div>
+        </div>
+        <div class="demo-presets">
+          <h3>⚡ Try a Demo Item</h3>
+          <div class="demo-presets-grid" id="demoPresetsGrid"></div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading-overlay" id="analyzeLoading" style="display:none;">
+        <div class="spinner"></div>
+        <p class="loading-text">Gemini is analyzing your item...</p>
+        <p class="loading-sub">Identifying materials, condition, and best next life.</p>
+      </div>
+
+      <!-- Result -->
+      <div class="result-container" id="analyzeResult" style="display:none;"></div>
+    </div>
+  </section>
+
+  <!-- ═══ MARKETPLACE ═══ -->
+  <section class="page-section" id="page-marketplace">
+    <div class="page-header"><h1>🛒 Marketplace</h1><p>Discover reusable items, recyclable materials, and handmade upcycled products.</p></div>
+    <div class="page-body">
+      <div class="marketplace-header">
+        <div class="search-box"><input type="text" id="marketplaceSearch" placeholder="Search items, materials, or products..." oninput="filterMarketplace()"></div>
+      </div>
+      <div class="filter-tabs" id="filterTabs"></div>
+      <div class="listings-grid" id="listingsGrid"></div>
+    </div>
+  </section>
+
+  <!-- ═══ MATERIALS ═══ -->
+  <section class="page-section" id="page-materials">
+    <div class="page-header"><h1>🏭 Materials Needed</h1><p>Industries and recyclers actively sourcing materials. Can you supply?</p></div>
+    <div class="page-body"><div class="entity-grid" id="materialsGrid"></div></div>
+  </section>
+
+  <!-- ═══ MAKERS ═══ -->
+  <section class="page-section" id="page-makers">
+    <div class="page-header"><h1>🎨 Handmade & Upcycled Makers</h1><p>Creative artisans turning waste into beautiful products.</p></div>
+    <div class="page-body"><div class="entity-grid" id="makersGrid"></div></div>
+  </section>
+
+  <!-- ═══ RECYCLERS ═══ -->
+  <section class="page-section" id="page-recyclers">
+    <div class="page-header"><h1>♻️ Recyclers & Collectors</h1><p>Find certified recyclers and waste collectors near you.</p></div>
+    <div class="page-body"><div class="entity-grid" id="recyclersGrid"></div></div>
+  </section>
+
+  <!-- ═══ MY LISTINGS ═══ -->
+  <section class="page-section" id="page-mylistings">
+    <div class="page-header"><h1>📋 My Listings</h1><p>Your items on the marketplace.</p></div>
+    <div class="page-body"><div id="myListingsContent"></div></div>
+  </section>
+
+</main>
+
+<!-- ─── MODAL ─── -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modalContent" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2 id="modalTitle">Modal</h2>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close modal">✕</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

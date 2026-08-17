@@ -1,5 +1,7 @@
 # ♻️ ReLoop — Give Things a Second Life
 
+![ReLoop Demo](readme%20image/image.png)
+
 ReLoop is an AI-powered circular marketplace that connects households, buyers, recyclers, industries, and makers. Users can upload or describe an unwanted item, and Gemini helps identify the item, understand its material and condition, recommend its best next life, generate a listing, and guide the user toward relevant reuse, recycling, upcycling, or marketplace opportunities.
 
 ## 🎯 Problem

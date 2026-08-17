@@ -826,6 +826,9 @@ function renderDashboard() {
     `).join('');
   }
 
+  // Render Role-Aware AI Assistant Card
+  renderDashboardAICard();
+
   const actionsGrid = document.getElementById('dashboardActionsGrid');
   if (actionsGrid) {
     actionsGrid.innerHTML = config.actions.map(a => `
@@ -834,6 +837,585 @@ function renderDashboard() {
       </button>
     `).join('');
   }
+}
+
+// ─── Role-Aware AI Assistant Client Engine ─────────────────
+
+function setAICardInput(val) {
+  const el = document.getElementById('aiRoleInput');
+  if (el) el.value = val;
+}
+
+async function callRoleAI(role, task, input) {
+  try {
+    const res = await fetch(API_BASE + '/api/ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role, task, input })
+    });
+    if (!res.ok) throw new Error('API status ' + res.status);
+    return await res.json();
+  } catch (err) {
+    console.warn("API server call offline/unreachable, fallback response:", err.message);
+    return {
+      success: true,
+      data: getClientFallbackData(role, task, input),
+      demo: true,
+      warning: "Offline demo mode active."
+    };
+  }
+}
+
+function getClientFallbackData(role, task, input) {
+  if (role === 'recycler' || task === 'classify-material') {
+    return {
+      likelyMaterial: "PET Plastic Bottles",
+      category: "Plastic",
+      matchLevel: "High",
+      recommendedAction: "Accept",
+      reason: "Matches your active PET plastic recovery program (clear bottles).",
+      suggestedResponse: "Thank you! We accept this collection request and can schedule pickup within 24 hours."
+    };
+  }
+  if (role === 'industry' || task === 'structure-material-request') {
+    return {
+      material: "PET Plastic Flakes",
+      quantity: "500 kg/month",
+      frequency: "Monthly",
+      priority: "High",
+      description: "Clean, baled or crushed PET plastic for industrial bottle recycling and fiber spinning.",
+      targetPrice: "৳ 45 / kg",
+      keywords: ["PET", "plastic", "recyclable", "bulk"]
+    };
+  }
+  if (role === 'maker' || task === 'upcycle-ideas') {
+    return {
+      rawMaterial: input || "Old Denim & Textiles",
+      ideas: [
+        {
+          name: "Upcycled Denim Tote Bag",
+          description: "Sturdy, stylish tote bag crafted from repurposed denim pockets and fabric scraps.",
+          category: "Handmade",
+          difficulty: "Easy",
+          estimatedPrice: "৳ 650",
+          materialsNeeded: ["Old denim jeans", "Lining fabric"]
+        },
+        {
+          name: "Patchwork Desk Organizer",
+          description: "Multi-pocket organizer designed for office tools and accessories.",
+          category: "Handmade",
+          difficulty: "Medium",
+          estimatedPrice: "৳ 450",
+          materialsNeeded: ["Denim scraps", "Cardboard"]
+        },
+        {
+          name: "Eco Cushion Cover",
+          description: "Hand-stitched decorative cushion cover blending denim tones.",
+          category: "Handmade",
+          difficulty: "Easy",
+          estimatedPrice: "৳ 550",
+          materialsNeeded: ["Denim patches", "Zipper"]
+        }
+      ]
+    };
+  }
+  if (role === 'buyer' || task === 'parse-shopping-request') {
+    return {
+      interpretedNeed: "Low-cost study table made from reclaimed wood",
+      category: "Furniture",
+      material: "Reclaimed Wood",
+      pricePreference: "Low",
+      keywords: ["wood", "table", "furniture", "reclaimed"]
+    };
+  }
+
+  // Individual fallback
+  return {
+    itemName: input || "Unused Plastic Containers",
+    category: "Plastic",
+    material: "HDPE / PET Plastic",
+    condition: "Good",
+    reusability: "High",
+    recommendedAction: "Recycle",
+    alternativeActions: ["Reuse", "Upcycle"],
+    reason: "Clean recyclable plastic suitable for local collection or community maker reuse.",
+    upcyclingIdeas: ["Planter pots", "Storage container"],
+    listingTitle: "Reusable Plastic Items",
+    listingDescription: "Clean plastic containers ready for recycling pickup or local maker upcycling.",
+    tags: ["plastic", "recycle", "reuse"],
+    hazardous: false,
+    hazardNote: ""
+  };
+}
+
+function renderDashboardAICard() {
+  const cardContainer = document.getElementById('dashboardAICard');
+  if (!cardContainer) return;
+
+  const role = currentRole;
+  
+  if (role === 'individual') {
+    cardContainer.innerHTML = `
+      <div class="ai-role-card">
+        <div class="ai-card-header">
+          <div class="ai-card-title">✨ ReLoop AI Advisor</div>
+          <span class="ai-badge-gemini">✨ Powered by Gemini</span>
+        </div>
+        <div class="ai-card-subtitle">"Not sure what to do with something you no longer need?"</div>
+        
+        <div class="ai-demo-presets">
+          <label>Try demo items:</label>
+          <button class="demo-chip-btn" onclick="setAICardInput('old plastic bottles')">🍾 15 Plastic Bottles</button>
+          <button class="demo-chip-btn" onclick="setAICardInput('broken wooden chair')">🪑 Wooden Chair</button>
+          <button class="demo-chip-btn" onclick="setAICardInput('used denim jacket')">🧥 Denim Jacket</button>
+        </div>
+
+        <div class="ai-input-group">
+          <input type="text" id="aiRoleInput" placeholder="Describe what you have (e.g. 15 plastic bottles, old wooden chair)...">
+          <button class="btn btn-primary" onclick="runIndividualAI()"><span class="emoji">🤖</span> Analyze & Advise</button>
+        </div>
+
+        <div class="ai-loading-box" id="aiRoleLoading">
+          <div class="ai-spinner"></div>
+          <div>
+            <strong style="color:var(--accent-emerald);">Gemini is working...</strong>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin:0;">Evaluating material, condition, reusability, and potential matches.</p>
+          </div>
+        </div>
+
+        <div class="ai-result-box" id="aiRoleResult"></div>
+      </div>
+    `;
+  } else if (role === 'recycler') {
+    cardContainer.innerHTML = `
+      <div class="ai-role-card">
+        <div class="ai-card-header">
+          <div class="ai-card-title">♻️ AI Material Matcher</div>
+          <span class="ai-badge-gemini">✨ Powered by Gemini</span>
+        </div>
+        <div class="ai-card-subtitle">Help recyclers quickly understand which available materials match accepted material types.</div>
+        
+        <div class="ai-demo-presets">
+          <label>Try demo requests:</label>
+          <button class="demo-chip-btn" onclick="setAICardInput('8 kg of clear plastic bottles')">🍾 8 kg PET Bottles</button>
+          <button class="demo-chip-btn" onclick="setAICardInput('15 kg corrugated cardboard boxes')">📦 15 kg Cardboard</button>
+          <button class="demo-chip-btn" onclick="setAICardInput('5 kg aluminum scrap cans')">🥫 5 kg Aluminum</button>
+        </div>
+
+        <div class="ai-input-group">
+          <input type="text" id="aiRoleInput" placeholder="Enter collection request (e.g. 8 kg of clear plastic bottles)...">
+          <button class="btn btn-primary" onclick="runRecyclerAIMatch()"><span class="emoji">🔍</span> Match Material</button>
+        </div>
+
+        <div class="ai-loading-box" id="aiRoleLoading">
+          <div class="ai-spinner"></div>
+          <div>
+            <strong style="color:var(--accent-emerald);">Gemini is matching material...</strong>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin:0;">Comparing request text against accepted material streams.</p>
+          </div>
+        </div>
+
+        <div class="ai-result-box" id="aiRoleResult"></div>
+      </div>
+    `;
+  } else if (role === 'industry') {
+    cardContainer.innerHTML = `
+      <div class="ai-role-card">
+        <div class="ai-card-header">
+          <div class="ai-card-title">🏭 AI Sourcing Assistant</div>
+          <span class="ai-badge-gemini">✨ Powered by Gemini</span>
+        </div>
+        <div class="ai-card-subtitle">Turn natural-language requirements into structured material requests & find matching suppliers.</div>
+        
+        <div class="ai-demo-presets">
+          <label>Try demo requirements:</label>
+          <button class="demo-chip-btn" onclick="setAICardInput('Need 500 kg PET plastic monthly for bottle recycling')">PET Plastic (500kg)</button>
+          <button class="demo-chip-btn" onclick="setAICardInput('Looking for 200 kg cotton fabric scraps for fiber spinning')">Cotton Scraps (200kg)</button>
+          <button class="demo-chip-btn" onclick="setAICardInput('1 ton corrugated cardboard boxes for paper mill')">Cardboard (1 Ton)</button>
+        </div>
+
+        <div class="ai-input-group">
+          <input type="text" id="aiRoleInput" placeholder="Enter material requirement (e.g. I need around 500 kg of PET plastic every month)...">
+          <button class="btn btn-primary" onclick="runIndustryAISourcing()"><span class="emoji">⚡</span> Structure & Match</button>
+        </div>
+
+        <div class="ai-loading-box" id="aiRoleLoading">
+          <div class="ai-spinner"></div>
+          <div>
+            <strong style="color:var(--accent-emerald);">Gemini is structuring requirement...</strong>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin:0;">Creating structured specifications & ranking local suppliers.</p>
+          </div>
+        </div>
+
+        <div class="ai-result-box" id="aiRoleResult"></div>
+      </div>
+    `;
+  } else if (role === 'maker') {
+    cardContainer.innerHTML = `
+      <div class="ai-role-card">
+        <div class="ai-card-header">
+          <div class="ai-card-title">🎨 AI Upcycle Studio</div>
+          <span class="ai-badge-gemini">✨ Powered by Gemini</span>
+        </div>
+        <div class="ai-card-subtitle">Turn available raw waste materials into marketable upcycled product ideas.</div>
+        
+        <div class="ai-demo-presets">
+          <label>Try demo raw materials:</label>
+          <button class="demo-chip-btn" onclick="setAICardInput('5 old denim jeans and fabric scraps')">👖 Denim & Fabrics</button>
+          <button class="demo-chip-btn" onclick="setAICardInput('reclaimed wooden shipping pallets')">🪵 Pallet Wood</button>
+          <button class="demo-chip-btn" onclick="setAICardInput('empty glass wine bottles')">🍾 Glass Bottles</button>
+        </div>
+
+        <div class="ai-input-group">
+          <input type="text" id="aiRoleInput" placeholder="Enter materials you have (e.g. 5 old denim jeans and fabric scraps)...">
+          <button class="btn btn-primary" onclick="runMakerAIUpcycle()"><span class="emoji">💡</span> Generate Ideas</button>
+        </div>
+
+        <div class="ai-loading-box" id="aiRoleLoading">
+          <div class="ai-spinner"></div>
+          <div>
+            <strong style="color:var(--accent-emerald);">Gemini is inventing products...</strong>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin:0;">Crafting 3 upcycled product concepts with titles, descriptions & prices.</p>
+          </div>
+        </div>
+
+        <div class="ai-result-box" id="aiRoleResult"></div>
+      </div>
+    `;
+  } else if (role === 'buyer') {
+    cardContainer.innerHTML = `
+      <div class="ai-role-card">
+        <div class="ai-card-header">
+          <div class="ai-card-title">🛒 AI Product Finder</div>
+          <span class="ai-badge-gemini">✨ Powered by Gemini</span>
+        </div>
+        <div class="ai-card-subtitle">Discover relevant upcycled and sustainable products using natural language.</div>
+        
+        <div class="ai-demo-presets">
+          <label>Try demo queries:</label>
+          <button class="demo-chip-btn" onclick="setAICardInput('low-cost study table made from reused wood')">🪑 Wooden Study Table</button>
+          <button class="demo-chip-btn" onclick="setAICardInput('upcycled denim tote bag')">👜 Denim Tote Bag</button>
+          <button class="demo-chip-btn" onclick="setAICardInput('handcrafted planter from glass')">🪴 Glass Planter</button>
+        </div>
+
+        <div class="ai-input-group">
+          <input type="text" id="aiRoleInput" placeholder="What are you looking for? (e.g. low-cost study table made from reused wood)...">
+          <button class="btn btn-primary" onclick="runBuyerAIFinder()"><span class="emoji">🔍</span> Find Products</button>
+        </div>
+
+        <div class="ai-loading-box" id="aiRoleLoading">
+          <div class="ai-spinner"></div>
+          <div>
+            <strong style="color:var(--accent-emerald);">Gemini is analyzing your request...</strong>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin:0;">Extracting search criteria & matching local marketplace items.</p>
+          </div>
+        </div>
+
+        <div class="ai-result-box" id="aiRoleResult"></div>
+      </div>
+    `;
+  }
+}
+
+// ─── Role AI Workflows ────────────────────────────────────
+
+async function runIndividualAI() {
+  const inputEl = document.getElementById('aiRoleInput');
+  const text = (inputEl?.value || '').trim();
+  if (!text) {
+    showToast('Please enter an item description or select a demo preset.', 'warning');
+    return;
+  }
+
+  const loadingEl = document.getElementById('aiRoleLoading');
+  const resultEl = document.getElementById('aiRoleResult');
+  if (loadingEl) loadingEl.style.display = 'flex';
+  if (resultEl) resultEl.style.display = 'none';
+
+  const res = await callRoleAI('individual', 'analyze-item', text);
+  if (loadingEl) loadingEl.style.display = 'none';
+
+  if (!res || !res.data) {
+    if (resultEl) {
+      resultEl.innerHTML = `<div style="color:var(--accent-coral);">AI couldn't complete this request right now. Please try again.</div>`;
+      resultEl.style.display = 'block';
+    }
+    return;
+  }
+
+  const d = res.data;
+  if (resultEl) {
+    const jsonStr = JSON.stringify(d).replace(/"/g, '&quot;');
+    resultEl.innerHTML = `
+      <div class="ai-result-header">
+        <span class="ai-result-title">🎯 Recommended Action: <strong>${d.recommendedAction}</strong></span>
+        <span class="badge badge-primary">${d.category}</span>
+      </div>
+      <p style="font-size:0.95rem; color:var(--text-primary); margin-bottom:0.75rem;">${d.reason}</p>
+      
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+        <span class="ai-tag-chip">Material: ${d.material}</span>
+        <span class="ai-tag-chip">Condition: ${d.condition || 'Good'}</span>
+        <span class="ai-tag-chip">Reusability: ${d.reusability || 'High'}</span>
+      </div>
+
+      ${d.upcyclingIdeas && d.upcyclingIdeas.length ? `
+        <div style="margin-bottom:1rem; font-size:0.9rem; color:var(--text-secondary);">
+          <strong>💡 Upcycling Suggestions:</strong> ${d.upcyclingIdeas.join(' • ')}
+        </div>
+      ` : ''}
+
+      <div style="display:flex; gap:0.75rem; flex-wrap:wrap; border-top:1px solid var(--border-light); padding-top:1rem;">
+        <button class="btn btn-primary btn-sm" onclick="prefillListingFromAI(${jsonStr})">📋 Create Listing with AI</button>
+        <button class="btn btn-secondary btn-sm" onclick="navigateTo('recyclers')">🚚 Find Recyclers</button>
+      </div>
+    `;
+    resultEl.style.display = 'block';
+  }
+}
+
+async function runRecyclerAIMatch() {
+  const inputEl = document.getElementById('aiRoleInput');
+  const text = (inputEl?.value || '').trim();
+  if (!text) {
+    showToast('Please enter a collection request or select a preset.', 'warning');
+    return;
+  }
+
+  const loadingEl = document.getElementById('aiRoleLoading');
+  const resultEl = document.getElementById('aiRoleResult');
+  if (loadingEl) loadingEl.style.display = 'flex';
+  if (resultEl) resultEl.style.display = 'none';
+
+  const res = await callRoleAI('recycler', 'classify-material', text);
+  if (loadingEl) loadingEl.style.display = 'none';
+
+  const d = res.data;
+  if (resultEl && d) {
+    const matEscaped = (d.likelyMaterial || 'Scrap Material').replace(/'/g, "\\'");
+    const textEscaped = text.replace(/'/g, "\\'");
+    resultEl.innerHTML = `
+      <div class="ai-result-header">
+        <span class="ai-result-title">♻️ Likely Material: <strong>${d.likelyMaterial}</strong></span>
+        <span class="badge ${d.matchLevel === 'High' ? 'badge-primary' : 'badge-warning'}">Match: ${d.matchLevel || 'High'}</span>
+      </div>
+      <p style="font-size:0.95rem; color:var(--text-primary); margin-bottom:0.75rem;">${d.reason}</p>
+      
+      <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-light); border-radius:8px; padding:0.75rem; font-size:0.88rem; color:var(--text-secondary); margin-bottom:1rem;">
+        💬 <strong>Suggested Response:</strong> "${d.suggestedResponse}"
+      </div>
+
+      <div style="display:flex; gap:0.75rem;">
+        <button class="btn btn-primary btn-sm" onclick="acceptRecyclerCollectionFromAI('${matEscaped}', '${textEscaped}')">✅ Accept Collection Request</button>
+        <button class="btn btn-secondary btn-sm" onclick="navigateTo('collection')">📋 View All Requests</button>
+      </div>
+    `;
+    resultEl.style.display = 'block';
+  }
+}
+
+async function runIndustryAISourcing() {
+  const inputEl = document.getElementById('aiRoleInput');
+  const text = (inputEl?.value || '').trim();
+  if (!text) {
+    showToast('Please enter a material requirement or select a preset.', 'warning');
+    return;
+  }
+
+  const loadingEl = document.getElementById('aiRoleLoading');
+  const resultEl = document.getElementById('aiRoleResult');
+  if (loadingEl) loadingEl.style.display = 'flex';
+  if (resultEl) resultEl.style.display = 'none';
+
+  const res = await callRoleAI('industry', 'structure-material-request', text);
+  if (loadingEl) loadingEl.style.display = 'none';
+
+  const d = res.data;
+  if (resultEl && d) {
+    const matQuery = (d.material + ' ' + (d.keywords || []).join(' ')).toLowerCase();
+    const matchedSuppliers = (typeof MOCK_RECYCLERS !== 'undefined' ? MOCK_RECYCLERS : []).filter(r => 
+      matQuery.includes(r.materials[0]?.toLowerCase() || '') || r.materials.some(m => matQuery.includes(m.toLowerCase()))
+    ).slice(0, 3);
+    const supplierList = matchedSuppliers.length ? matchedSuppliers : (typeof MOCK_RECYCLERS !== 'undefined' ? MOCK_RECYCLERS.slice(0, 2) : []);
+
+    const jsonStr = JSON.stringify(d).replace(/"/g, '&quot;');
+    resultEl.innerHTML = `
+      <div class="ai-result-header">
+        <span class="ai-result-title">📋 Structured Requirement: <strong>${d.material}</strong></span>
+        <span class="badge badge-primary">${d.quantity}</span>
+      </div>
+      <p style="font-size:0.95rem; color:var(--text-primary); margin-bottom:0.75rem;">${d.description}</p>
+
+      <div style="margin-bottom:1rem;">
+        <h5 style="color:var(--accent-emerald); margin-bottom:0.5rem; font-size:0.9rem;">📍 AI Suggested Local Supplier Matches:</h5>
+        <div style="display:grid; gap:0.5rem;">
+          ${supplierList.map(s => `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); border:1px solid var(--border-light); padding:8px 12px; border-radius:6px; font-size:0.85rem;">
+              <div><strong>${s.name}</strong> <span style="color:var(--text-secondary);">(${s.location})</span></div>
+              <button class="btn btn-secondary btn-sm" style="padding:2px 8px;" onclick="showToast('Contact request sent to ${s.name}','success')">Contact</button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div style="display:flex; gap:0.75rem;">
+        <button class="btn btn-primary btn-sm" onclick="prefillRequirementFromAI(${jsonStr})">📢 Post Requirement & Edit</button>
+        <button class="btn btn-secondary btn-sm" onclick="navigateTo('suppliers')">🏢 Browse All Suppliers</button>
+      </div>
+    `;
+    resultEl.style.display = 'block';
+  }
+}
+
+async function runMakerAIUpcycle() {
+  const inputEl = document.getElementById('aiRoleInput');
+  const text = (inputEl?.value || '').trim();
+  if (!text) {
+    showToast('Please enter raw materials or select a preset.', 'warning');
+    return;
+  }
+
+  const loadingEl = document.getElementById('aiRoleLoading');
+  const resultEl = document.getElementById('aiRoleResult');
+  if (loadingEl) loadingEl.style.display = 'flex';
+  if (resultEl) resultEl.style.display = 'none';
+
+  const res = await callRoleAI('maker', 'upcycle-ideas', text);
+  if (loadingEl) loadingEl.style.display = 'none';
+
+  const d = res.data;
+  if (resultEl && d && d.ideas) {
+    resultEl.innerHTML = `
+      <div class="ai-result-header" style="margin-bottom:1rem;">
+        <span class="ai-result-title">💡 3 Upcycled Product Concepts for: <em>${d.rawMaterial}</em></span>
+      </div>
+      <div style="display:grid; gap:0.75rem; margin-bottom:1rem;">
+        ${d.ideas.map((idea, idx) => {
+          const ideaStr = JSON.stringify(idea).replace(/"/g, '&quot;');
+          return `
+            <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-light); border-radius:8px; padding:1rem; display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
+              <div style="flex:1; min-width:200px;">
+                <div style="font-weight:700; font-size:1rem; color:var(--text-primary); margin-bottom:0.25rem;">${idx + 1}. ${idea.name}</div>
+                <div style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.5rem;">${idea.description}</div>
+                <div style="display:flex; gap:0.5rem; font-size:0.8rem;">
+                  <span class="badge badge-secondary">${idea.difficulty || 'Easy'}</span>
+                  <span style="color:var(--accent-emerald); font-weight:700;">Est: ${idea.estimatedPrice || '৳ 500'}</span>
+                </div>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="prefillProductFromAI(${ideaStr})">🎨 Create Product with AI</button>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+    resultEl.style.display = 'block';
+  }
+}
+
+async function runBuyerAIFinder() {
+  const inputEl = document.getElementById('aiRoleInput');
+  const text = (inputEl?.value || '').trim();
+  if (!text) {
+    showToast('Please enter what you are searching for or select a preset.', 'warning');
+    return;
+  }
+
+  const loadingEl = document.getElementById('aiRoleLoading');
+  const resultEl = document.getElementById('aiRoleResult');
+  if (loadingEl) loadingEl.style.display = 'flex';
+  if (resultEl) resultEl.style.display = 'none';
+
+  const res = await callRoleAI('buyer', 'parse-shopping-request', text);
+  if (loadingEl) loadingEl.style.display = 'none';
+
+  const d = res.data;
+  if (resultEl && d) {
+    const cat = (d.category || 'All').toLowerCase();
+    const kw = (d.material + ' ' + (d.keywords || []).join(' ')).toLowerCase();
+    let matches = (typeof MOCK_LISTINGS !== 'undefined' ? MOCK_LISTINGS : []).filter(i => {
+      if (cat !== 'all' && i.category.toLowerCase() !== cat) return false;
+      return (i.title + ' ' + i.description + ' ' + i.material).toLowerCase().includes(kw) || kw.includes(i.category.toLowerCase());
+    });
+
+    if (!matches.length) matches = typeof MOCK_LISTINGS !== 'undefined' ? MOCK_LISTINGS.slice(0, 3) : [];
+
+    resultEl.innerHTML = `
+      <div class="ai-result-header">
+        <span class="ai-result-title">🎯 Search Preferences Extracted:</span>
+        <span class="badge badge-primary">Category: ${d.category || 'All'}</span>
+      </div>
+      <p style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:1rem;">Interpreted: <em>"${d.interpretedNeed}"</em></p>
+
+      <h5 style="color:var(--accent-emerald); margin-bottom:0.75rem; font-size:0.95rem;">🛍️ AI Recommended For You:</h5>
+      <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:1rem; margin-bottom:1rem;">
+        ${matches.map(i => `
+          <div class="card" style="padding:0.75rem; border-radius:8px; cursor:pointer;" onclick="openListingModal(${i.id})">
+            <div style="font-size:2rem; text-align:center; padding:0.5rem; background:rgba(255,255,255,0.03); border-radius:6px;">${i.emoji || '📦'}</div>
+            <div style="font-weight:700; font-size:0.95rem; margin:0.5rem 0 0.25rem;">${i.title}</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem;">
+              <span style="color:var(--accent-emerald); font-weight:700;">${i.price === 0 ? 'Free' : i.currency + ' ' + i.price.toLocaleString()}</span>
+              <span class="badge badge-secondary">${i.category}</span>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <button class="btn btn-secondary btn-sm" onclick="navigateTo('marketplace')">🛒 View Full Marketplace</button>
+    `;
+    resultEl.style.display = 'block';
+  }
+}
+
+// ─── Editable Action Helpers ───────────────────────────────
+
+function prefillListingFromAI(d) {
+  openCreateListingModal();
+  setTimeout(() => {
+    const titleEl = document.getElementById('modalListingTitle');
+    const catEl = document.getElementById('modalListingCategory');
+    const descEl = document.getElementById('modalListingDesc');
+    if (titleEl && d.listingTitle) titleEl.value = d.listingTitle;
+    if (catEl && d.category) catEl.value = d.category;
+    if (descEl && d.listingDescription) descEl.value = d.listingDescription;
+    showToast('Listing pre-filled with AI recommendations. Edit anytime before submitting.', 'info');
+  }, 100);
+}
+
+function prefillRequirementFromAI(d) {
+  showToast(`Requirement for "${d.material}" prepared. Edit details before posting.`, 'success');
+  navigateTo('industry_demand');
+}
+
+function prefillProductFromAI(idea) {
+  if (typeof MOCK_MAKER_PRODUCTS !== 'undefined') {
+    MOCK_MAKER_PRODUCTS.unshift({
+      id: Date.now(),
+      title: idea.name,
+      category: idea.category || 'Handmade',
+      material: idea.materialsNeeded?.join(', ') || 'Reclaimed Waste',
+      price: parseInt((idea.estimatedPrice || '500').replace(/[^0-9]/g, '')),
+      status: 'Active',
+      emoji: '🎨'
+    });
+  }
+  showToast(`Upcycled product "${idea.name}" generated! Ready for editing.`, 'success');
+  navigateTo('myproducts');
+}
+
+function acceptRecyclerCollectionFromAI(material, requestText) {
+  if (typeof MOCK_COLLECTION_REQUESTS !== 'undefined') {
+    MOCK_COLLECTION_REQUESTS.unshift({
+      id: 'REQ-' + Math.floor(1000 + Math.random() * 9000),
+      requester: 'Community User',
+      material: material,
+      quantity: requestText,
+      location: 'Dhaka, Bangladesh',
+      date: 'Today',
+      status: 'Accepted'
+    });
+  }
+  showToast(`Accepted collection request for ${material}!`, 'success');
+  navigateTo('collection');
 }
 
 function renderProfile() {

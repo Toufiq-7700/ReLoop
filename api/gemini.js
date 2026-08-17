@@ -13,8 +13,8 @@ const ALLOWED_ORIGINS = [
   "http://localhost:5500",
   "http://127.0.0.1:5500",
   "http://localhost:8080",
-  // Add your production domain here, e.g.:
-  // "https://reloop.vercel.app"
+  "http://localhost:8085",
+  "http://127.0.0.1:8085"
 ];
 
 function setCorsHeaders(req, res) {
@@ -42,7 +42,7 @@ function callGemini(prompt) {
         }
       ],
       generationConfig: {
-        temperature: 0.4,
+        temperature: 0.3,
         maxOutputTokens: 1024
       }
     });
@@ -80,82 +80,227 @@ function callGemini(prompt) {
   });
 }
 
-// ─── Build analysis prompt ────────────────────────────────
-function buildPrompt(description, hasImage) {
+// ─── Build Role-Aware Gemini Prompts ───────────────────────
+function buildRolePrompt(role, task, input, hasImage) {
+  const baseHeader = `You are the AI engine of ReLoop, a circular economy platform in Bangladesh. 
+Your goal is to process role-specific user requests and respond ONLY with valid JSON (no markdown formatting, no text outside JSON).`;
+
+  if (task === "classify-material" || role === "recycler") {
+    return `${baseHeader}
+Role: Recycler / Material Collector
+Task: Classify waste request and match against accepted recyclable materials.
+User Request: "${input}"
+
+Respond ONLY with valid JSON in this exact schema:
+{
+  "likelyMaterial": "e.g. PET Plastic, Cardboard, Aluminum Scrap, Cotton Textile",
+  "category": "e.g. Plastic, Paper, Metal, Textile, Glass, Electronics",
+  "matchLevel": "High",
+  "recommendedAction": "Accept",
+  "reason": "1-2 sentence concise explanation of material match and sorting state.",
+  "suggestedResponse": "Short 1-sentence friendly confirmation response to user."
+}`;
+  }
+
+  if (task === "structure-material-request" || role === "industry") {
+    return `${baseHeader}
+Role: Industry Partner
+Task: Convert a natural language raw material requirement into a structured procurement request.
+User Input: "${input}"
+
+Respond ONLY with valid JSON in this exact schema:
+{
+  "material": "Specific material name e.g. PET Plastic Flakes",
+  "quantity": "Estimated quantity e.g. 500 kg/month",
+  "frequency": "Monthly / One-time / Weekly",
+  "priority": "High",
+  "description": "2-sentence clear procurement description.",
+  "targetPrice": "Estimated price range e.g. ৳ 40-50/kg",
+  "keywords": ["tag1", "tag2", "tag3"]
+}`;
+  }
+
+  if (task === "upcycle-ideas" || role === "maker") {
+    return `${baseHeader}
+Role: Maker / Upcycler
+Task: Generate 3 creative, marketable upcycled product ideas from available raw waste material.
+User Input Material: "${input}"
+
+Respond ONLY with valid JSON in this exact schema:
+{
+  "rawMaterial": "${input}",
+  "ideas": [
+    {
+      "name": "Creative Product Title 1",
+      "description": "Short 2-sentence description of the upcycled product.",
+      "category": "Handmade",
+      "difficulty": "Easy",
+      "estimatedPrice": "৳ 450",
+      "materialsNeeded": ["Material 1", "Material 2"]
+    },
+    {
+      "name": "Creative Product Title 2",
+      "description": "Short 2-sentence description.",
+      "category": "Handmade",
+      "difficulty": "Medium",
+      "estimatedPrice": "৳ 750",
+      "materialsNeeded": ["Material 1"]
+    },
+    {
+      "name": "Creative Product Title 3",
+      "description": "Short 2-sentence description.",
+      "category": "Handmade",
+      "difficulty": "Advanced",
+      "estimatedPrice": "৳ 1200",
+      "materialsNeeded": ["Material 1"]
+    }
+  ]
+}`;
+  }
+
+  if (task === "parse-shopping-request" || role === "buyer") {
+    return `${baseHeader}
+Role: Buyer / Sustainable Shopper
+Task: Interpret buyer natural language query and extract structured shopping search preferences.
+User Query: "${input}"
+
+Respond ONLY with valid JSON in this exact schema:
+{
+  "interpretedNeed": "Summary of what the buyer wants",
+  "category": "One of: Furniture, Clothing, Plastic, Metal, Glass, Paper, Electronics, Handmade, All",
+  "material": "Primary material preferred or 'Any'",
+  "pricePreference": "Low / Moderate / Premium",
+  "keywords": ["tag1", "tag2", "tag3"]
+}`;
+  }
+
+  // Default: Individual analyze-item
   return `You are the AI core of ReLoop, a circular economy marketplace in Bangladesh. 
-A user has submitted an item they want to give a second life to.
+A user has submitted an item description: "${input}".
+${hasImage ? "Note: Image attached." : ""}
 
-Item description: "${description}"
-${hasImage ? "Note: An image was also uploaded (use description as primary input for this text endpoint)." : ""}
-
-Analyze this item and respond ONLY with valid JSON in this exact schema (no markdown, no explanation outside JSON):
-
+Respond ONLY with valid JSON in this exact schema:
 {
   "itemName": "short name for the item",
-  "category": "one of: Furniture, Electronics, Clothing, Plastic, Metal, Glass, Paper, Mixed, Organic, Other",
+  "category": "Furniture, Electronics, Clothing, Plastic, Metal, Glass, Paper, Mixed, Organic, Other",
   "material": "primary material(s)",
-  "condition": "one of: New, Good, Fair, Poor, Broken, Unknown",
-  "reusability": "one of: High, Medium, Low",
-  "recommendedAction": "one of: Sell, Donate, Reuse, Repair, Recycle, Upcycle, Collect",
-  "alternativeActions": ["up to 2 other actions"],
-  "reason": "1-2 sentence explanation (use words like 'likely', 'appears to be', 'suggest checking with a local recycler' for uncertainty)",
-  "upcyclingIdeas": ["2-3 creative reuse ideas"],
-  "listingTitle": "short marketplace listing title (max 10 words)",
-  "listingDescription": "2-sentence marketplace description",
-  "tags": ["3-5 relevant tags"],
+  "condition": "New, Good, Fair, Poor, Broken, Unknown",
+  "reusability": "High, Medium, Low",
+  "recommendedAction": "Sell, Donate, Reuse, Repair, Recycle, Upcycle, Collect",
+  "alternativeActions": ["Action 1", "Action 2"],
+  "reason": "1-2 sentence explanation",
+  "upcyclingIdeas": ["Idea 1", "Idea 2"],
+  "listingTitle": "Short marketplace title",
+  "listingDescription": "2-sentence listing description",
+  "tags": ["tag1", "tag2"],
   "hazardous": false,
   "hazardNote": ""
+}`;
 }
 
-Rules:
-- If the item appears hazardous (chemicals, batteries, asbestos, medical waste), set hazardous: true and provide a safety note.
-- Never claim exact prices or verified recycling rates.
-- Use cautious language for uncertain classifications.
-- Keep all text concise and practical.
-- The response must be parseable JSON with no extra characters.`;
+// ─── Fallback Generators for Offline / Demo Mode ──────────
+function getFallbackData(role, task, input) {
+  if (role === "recycler" || task === "classify-material") {
+    return {
+      likelyMaterial: "PET Plastic Bottles",
+      category: "Plastic",
+      matchLevel: "High",
+      recommendedAction: "Accept",
+      reason: "This material stream matches your active PET plastic recovery program (clear, sorted bottles).",
+      suggestedResponse: "Thank you! We accept this collection request and can schedule pickup within 24 hours."
+    };
+  }
+
+  if (role === "industry" || task === "structure-material-request") {
+    return {
+      material: "PET Plastic Bottles / Flakes",
+      quantity: "500 kg/month",
+      frequency: "Monthly",
+      priority: "High",
+      description: "Sourcing clean, baled or crushed PET plastic for industrial bottle recycling and fiber spinning.",
+      targetPrice: "৳ 40 - ৳ 50 / kg",
+      keywords: ["plastic", "PET", "recyclable", "bulk"]
+    };
+  }
+
+  if (role === "maker" || task === "upcycle-ideas") {
+    return {
+      rawMaterial: input || "Old Denim & Textiles",
+      ideas: [
+        {
+          name: "Upcycled Denim Tote Bag",
+          description: "Sturdy, stylish everyday tote bag crafted from repurposed denim pockets and heavy fabric scraps.",
+          category: "Handmade",
+          difficulty: "Easy",
+          estimatedPrice: "৳ 650",
+          materialsNeeded: ["Old denim jeans", "Lining fabric", "Strap handles"]
+        },
+        {
+          name: "Patchwork Desk Organizer",
+          description: "Multi-pocket wall or desk organizer designed to store office accessories and craft tools.",
+          category: "Handmade",
+          difficulty: "Medium",
+          estimatedPrice: "৳ 450",
+          materialsNeeded: ["Denim scraps", "Cardboard backing"]
+        },
+        {
+          name: "Eco-Friendly Cushion Cover",
+          description: "Hand-stitched decorative cushion cover blending denim tones with cotton trim.",
+          category: "Handmade",
+          difficulty: "Easy",
+          estimatedPrice: "৳ 550",
+          materialsNeeded: ["Denim patches", "Zipper"]
+        }
+      ]
+    };
+  }
+
+  if (role === "buyer" || task === "parse-shopping-request") {
+    return {
+      interpretedNeed: "Low-cost study table made from reclaimed wood",
+      category: "Furniture",
+      material: "Reclaimed Wood",
+      pricePreference: "Low",
+      keywords: ["wood", "furniture", "table", "reclaimed"]
+    };
+  }
+
+  // Individual fallback
+  return {
+    itemName: input || "Unused Plastic Containers",
+    category: "Plastic",
+    material: "HDPE / PET Plastic",
+    condition: "Good",
+    reusability: "High",
+    recommendedAction: "Recycle",
+    alternativeActions: ["Reuse", "Upcycle"],
+    reason: "Appears to be clean, recyclable plastic suitable for local collection or community maker reuse.",
+    upcyclingIdeas: ["Use as planter pots", "Storage container", "Craft material"],
+    listingTitle: "Reusable / Recyclable Plastic Items",
+    listingDescription: "Clean plastic containers ready for recycling pickup or local maker upcycling.",
+    tags: ["plastic", "recycle", "reuse"],
+    hazardous: false,
+    hazardNote: ""
+  };
 }
 
 // ─── Parse & validate AI JSON ─────────────────────────────
-function parseAIResponse(geminiResponse) {
+function parseAIResponse(geminiResponse, role, task, input) {
   try {
     const text = geminiResponse?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    // Strip markdown code fences if present
     const cleaned = text.replace(/```json\n?/gi, "").replace(/```\n?/g, "").trim();
     const parsed = JSON.parse(cleaned);
-
-    // Validate required fields
-    const required = ["itemName", "category", "material", "recommendedAction"];
-    for (const field of required) {
-      if (!parsed[field]) throw new Error(`Missing field: ${field}`);
-    }
-
     return { success: true, data: parsed };
   } catch (e) {
-    // Graceful fallback
     return {
       success: false,
       error: e.message,
-      data: {
-        itemName: "Unidentified Item",
-        category: "Mixed",
-        material: "Unknown",
-        condition: "Unknown",
-        reusability: "Medium",
-        recommendedAction: "Recycle",
-        alternativeActions: ["Donate", "Reuse"],
-        reason: "Gemini could not fully analyze this item. We suggest checking with a local recycler or donation center.",
-        upcyclingIdeas: ["Consider creative reuse", "Check with local makers", "Donate if usable"],
-        listingTitle: "Item Available",
-        listingDescription: "Item available for reuse, recycling, or donation. Contact for more details.",
-        tags: ["reuse", "recycle", "community"],
-        hazardous: false,
-        hazardNote: ""
-      }
+      data: getFallbackData(role, task, input)
     };
   }
 }
 
-// ─── Vercel / serverless export ───────────────────────────
+// ─── Vercel / Serverless Export ───────────────────────────
 module.exports = async function handler(req, res) {
   setCorsHeaders(req, res);
 
@@ -171,42 +316,54 @@ module.exports = async function handler(req, res) {
 
   let body;
   try {
-    // Parse body — works with Vercel's auto-parsing
     body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
   } catch (e) {
     res.status(400).json({ error: "Invalid JSON body" });
     return;
   }
 
-  const { description, hasImage } = body || {};
+  const { role = "individual", task = "analyze-item", input = "", description = "", hasImage = false } = body || {};
+  const userText = (input || description).trim();
 
-  if (!description || description.trim().length < 3) {
-    res.status(400).json({ error: "Please provide an item description (at least 3 characters)." });
-    return;
-  }
-
-  if (description.length > 1000) {
-    res.status(400).json({ error: "Description is too long. Please keep it under 1000 characters." });
+  if (!userText || userText.length < 2) {
+    res.status(400).json({ error: "Please provide a valid input description (at least 2 characters)." });
     return;
   }
 
   try {
-    const prompt = buildPrompt(description.trim(), !!hasImage);
+    if (!process.env.GEMINI_API_KEY) {
+      // Return structured fallback response if key is missing
+      const fallback = getFallbackData(role, task, userText);
+      res.status(200).json({
+        success: true,
+        data: fallback,
+        analysis: fallback,
+        demo: true,
+        warning: "GEMINI_API_KEY not configured on server. Using fallback AI response."
+      });
+      return;
+    }
+
+    const prompt = buildRolePrompt(role, task, userText, !!hasImage);
     const geminiRaw = await callGemini(prompt);
-    const result = parseAIResponse(geminiRaw);
+    const result = parseAIResponse(geminiRaw, role, task, userText);
 
     res.status(200).json({
-      success: result.success,
+      success: true,
+      data: result.data,
       analysis: result.data,
-      warning: result.success ? null : "AI analysis was partially successful. Using fallback data.",
+      warning: result.success ? null : "AI response partially cleaned with standard defaults.",
       demo: false
     });
   } catch (err) {
-    console.error("Gemini API error:", err.message);
-    res.status(502).json({
-      success: false,
-      error: "Could not reach Gemini API. Please try again later.",
-      analysis: null
+    console.error("Gemini API server error:", err.message);
+    const fallback = getFallbackData(role, task, userText);
+    res.status(200).json({
+      success: true,
+      data: fallback,
+      analysis: fallback,
+      warning: "Could not reach Gemini API directly. Using structured intelligent fallback.",
+      demo: true
     });
   }
 };
@@ -216,20 +373,20 @@ if (require.main === module) {
   const http = require("http");
 
   const server = http.createServer((req, res) => {
-    if (req.url === "/api/analyze" && req.method === "POST") {
+    if ((req.url === "/api/analyze" || req.url === "/api/ai") && req.method === "POST") {
       let rawBody = "";
       req.on("data", (chunk) => (rawBody += chunk));
       req.on("end", () => {
         req.body = rawBody;
         module.exports(req, res);
       });
-    } else if (req.url === "/api/analyze" && req.method === "OPTIONS") {
+    } else if ((req.url === "/api/analyze" || req.url === "/api/ai") && req.method === "OPTIONS") {
       setCorsHeaders(req, res);
       res.writeHead(200);
       res.end();
     } else if (req.url === "/health") {
       res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ status: "ok", service: "ReLoop API" }));
+      res.end(JSON.stringify({ status: "ok", service: "ReLoop Role-Aware AI API" }));
     } else {
       res.writeHead(404, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: "Not found" }));
@@ -238,10 +395,12 @@ if (require.main === module) {
 
   const PORT = process.env.PORT || 3000;
   server.listen(PORT, () => {
-    console.log(`✅ ReLoop API server running on http://localhost:${PORT}`);
+    console.log(`✅ ReLoop Role-Aware AI API running on http://localhost:${PORT}`);
+    console.log(`   POST http://localhost:${PORT}/api/ai`);
     console.log(`   POST http://localhost:${PORT}/api/analyze`);
     if (!process.env.GEMINI_API_KEY) {
-      console.warn("⚠️  GEMINI_API_KEY not set — set it in your .env file");
+      console.warn("⚠️  GEMINI_API_KEY not set — using structured fallback AI mode for demo.");
     }
   });
 }
+

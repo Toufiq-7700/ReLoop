@@ -531,26 +531,99 @@ document.querySelectorAll('.animate-on-scroll').forEach(el => {
   observer.observe(el);
 });
 
-// Generate Floating Squares
+// Generate Floating Squares with Mouse/Scroll Parallax
 function generateSquares() {
   const container = document.getElementById('floatingSquares');
   if (!container) return;
-  const numSquares = 15;
+  container.innerHTML = '';
+  
+  const numSquares = 40;
   for (let i = 0; i < numSquares; i++) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'square-wrapper';
+    
     const square = document.createElement('div');
     square.className = 'square';
-    const size = Math.random() * 80 + 20;
-    const left = Math.random() * 100;
-    const top = Math.random() * 100;
+    
+    const size = Math.random() * 100 + 20;
+    const left = Math.random() * 110 - 5;
+    const top = Math.random() * 110 - 5;
     const delay = Math.random() * 5;
-    const duration = Math.random() * 10 + 10;
+    const duration = Math.random() * 15 + 15;
+    const depth = Math.random() * 2.5 + 1; // 1 to 3.5
+    
+    wrapper.style.left = `${left}%`;
+    wrapper.style.top = `${top}%`;
+    wrapper.style.setProperty('--depth', depth);
+    
     square.style.width = `${size}px`;
     square.style.height = `${size}px`;
-    square.style.left = `${left}%`;
-    square.style.top = `${top}%`;
-    square.style.animationDelay = `${delay}s`;
+    square.style.animationDelay = `-${delay}s`;
     square.style.animationDuration = `${duration}s`;
-    container.appendChild(square);
+    
+    // Opacity based on depth - closer is more visible
+    square.style.opacity = 0.05 + (1 / depth) * 0.15;
+    
+    wrapper.appendChild(square);
+    container.appendChild(wrapper);
+  }
+
+  // Hero section floating elements
+  const heroGrid = document.querySelector('.hero');
+  if (heroGrid) {
+    const heroSquaresData = [
+      { label: "AI", icon: "✨", color: "rgba(16, 185, 129, 0.2)" },
+      { label: "Recycle", icon: "♻️", color: "rgba(6, 182, 212, 0.2)" },
+      { label: "Maker", icon: "🎨", color: "rgba(99, 102, 241, 0.2)" },
+      { label: "Buyer", icon: "🛍️", color: "rgba(244, 114, 182, 0.2)" },
+      { label: "Industry", icon: "🏭", color: "rgba(251, 191, 36, 0.2)" }
+    ];
+    
+    heroSquaresData.forEach((data, index) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'square-wrapper hero-float-wrapper';
+      wrapper.style.setProperty('--depth', 1.2 + Math.random());
+      
+      const angle = (index / heroSquaresData.length) * Math.PI * 2;
+      const radius = 35 + Math.random() * 10;
+      wrapper.style.left = `calc(50% + ${Math.cos(angle) * radius}% - 40px)`;
+      wrapper.style.top = `calc(50% + ${Math.sin(angle) * radius}% - 40px)`;
+      
+      const el = document.createElement('div');
+      el.className = 'hero-float-square';
+      el.style.borderColor = data.color;
+      el.style.boxShadow = `0 0 15px ${data.color}`;
+      el.innerHTML = `<span class="icon">${data.icon}</span><span class="label">${data.label}</span>`;
+      el.style.animationDelay = `-${Math.random() * 5}s`;
+      
+      wrapper.appendChild(el);
+      heroGrid.appendChild(wrapper);
+    });
+  }
+
+  // Mouse and Scroll tracking for CSS variables
+  let mouseX = 0, mouseY = 0;
+  let currentX = 0, currentY = 0;
+  
+  document.addEventListener('mousemove', (e) => {
+    mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+    mouseY = (e.clientY / window.innerHeight) * 2 - 1;
+  });
+  
+  // Smooth interpolation loop
+  function updateParallax() {
+    currentX += (mouseX - currentX) * 0.05;
+    currentY += (mouseY - currentY) * 0.05;
+    
+    document.documentElement.style.setProperty('--mouse-x', currentX);
+    document.documentElement.style.setProperty('--mouse-y', currentY);
+    document.documentElement.style.setProperty('--scroll-y', window.scrollY);
+    
+    requestAnimationFrame(updateParallax);
+  }
+  
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    updateParallax();
   }
 }
 generateSquares();

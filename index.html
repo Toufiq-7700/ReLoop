@@ -28,10 +28,10 @@
     <a href="#" data-page="recyclers" id="nav-recyclers">♻️ Recyclers</a>
     <a href="#" data-page="mylistings" id="nav-mylistings">📋 My Listings</a>
   </nav>
-  <div class="sidebar-user">
+  <div class="sidebar-user" style="position:relative; cursor:pointer;" onclick="openRoleSelectionModal()">
     <div class="sidebar-user-avatar">D</div>
-    <div class="sidebar-user-info">
-      Demo User<br><small>Individual</small>
+    <div class="sidebar-user-info" id="sidebarUserInfo">
+      Demo User<br><small>Individual ▼</small>
     </div>
   </div>
 </aside>
@@ -46,8 +46,8 @@
         <h1>Give Things a <em>Second Life.</em></h1>
         <p>ReLoop connects unused products, recyclable materials, makers, collectors, industries, and buyers — using AI to find the best next destination for what you no longer need.</p>
         <div class="hero-actions">
-          <button class="btn btn-primary btn-lg" onclick="navigateTo('analyze')" id="cta-analyze">🔬 Analyze My Item</button>
-          <button class="btn btn-secondary btn-lg" onclick="navigateTo('marketplace')" id="cta-marketplace" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff;">🛒 Explore Marketplace</button>
+          <button class="btn btn-primary btn-lg" onclick="openRoleSelectionModal()" id="cta-try">🚀 Try ReLoop</button>
+          <button class="btn btn-secondary btn-lg" onclick="navigateTo('analyze')" id="cta-analyze" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff;">🔬 Analyze My Item</button>
         </div>
         <div class="flow-visual">
           <div class="flow-step">📦 Unused Item</div>
@@ -206,6 +206,48 @@
       <button class="modal-close" onclick="closeModal()" aria-label="Close modal">✕</button>
     </div>
     <div id="modalBody"></div>
+  </div>
+</div>
+
+
+<div class="modal-overlay" id="roleModalOverlay" onclick="closeRoleModal(event)">
+  <div class="modal" id="roleModalContent" onclick="event.stopPropagation()" style="max-width: 600px;">
+    <div class="modal-header">
+      <h2>Choose Your Role</h2>
+      <button class="modal-close" onclick="closeRoleModal()" aria-label="Close modal">✕</button>
+    </div>
+    <div class="role-grid" style="display: grid; gap: 1rem;">
+      <div class="card entity-card" style="cursor: pointer; padding: 1rem;" onclick="selectRole('individual')">
+        <div class="entity-header" style="margin-bottom: 0;">
+          <div class="entity-icon" style="width: 42px; height: 42px; font-size: 1.3rem;">👤</div>
+          <div><div class="entity-name">Individual / User</div><div class="entity-sub">I have unused items or recyclable materials.</div></div>
+        </div>
+      </div>
+      <div class="card entity-card" style="cursor: pointer; padding: 1rem;" onclick="selectRole('recycler')">
+        <div class="entity-header" style="margin-bottom: 0;">
+          <div class="entity-icon" style="width: 42px; height: 42px; font-size: 1.3rem;">♻️</div>
+          <div><div class="entity-name">Recycler / Collector</div><div class="entity-sub">I collect recyclable materials from people.</div></div>
+        </div>
+      </div>
+      <div class="card entity-card" style="cursor: pointer; padding: 1rem;" onclick="selectRole('industry')">
+        <div class="entity-header" style="margin-bottom: 0;">
+          <div class="entity-icon" style="width: 42px; height: 42px; font-size: 1.3rem;">🏭</div>
+          <div><div class="entity-name">Industry</div><div class="entity-sub">I need recyclable materials for my business.</div></div>
+        </div>
+      </div>
+      <div class="card entity-card" style="cursor: pointer; padding: 1rem;" onclick="selectRole('maker')">
+        <div class="entity-header" style="margin-bottom: 0;">
+          <div class="entity-icon" style="width: 42px; height: 42px; font-size: 1.3rem;">🎨</div>
+          <div><div class="entity-name">Maker / Upcycler</div><div class="entity-sub">I create products using recycled or unused materials.</div></div>
+        </div>
+      </div>
+      <div class="card entity-card" style="cursor: pointer; padding: 1rem;" onclick="selectRole('buyer')">
+        <div class="entity-header" style="margin-bottom: 0;">
+          <div class="entity-icon" style="width: 42px; height: 42px; font-size: 1.3rem;">🛒</div>
+          <div><div class="entity-name">Buyer</div><div class="entity-sub">I want to buy reusable, handmade, or upcycled products.</div></div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 

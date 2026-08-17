@@ -326,4 +326,104 @@ function publishListing(){
 }
 
 // Init
-renderImpact();renderDemoPresets();navigateTo('home');
+renderImpact();renderDemoPresets();
+
+// Role Management
+let currentRole = localStorage.getItem('reloopRole') || 'individual';
+
+const roleDisplayNames = {
+  'individual': 'Individual / User',
+  'recycler': 'Recycler / Collector',
+  'industry': 'Industry',
+  'maker': 'Maker / Upcycler',
+  'buyer': 'Buyer'
+};
+
+function openRoleSelectionModal() {
+  document.getElementById('roleModalOverlay').classList.add('open');
+}
+
+function closeRoleModal(e) {
+  if (!e || e.target === document.getElementById('roleModalOverlay')) {
+    document.getElementById('roleModalOverlay').classList.remove('open');
+  }
+}
+
+function selectRole(role) {
+  currentRole = role;
+  localStorage.setItem('reloopRole', role);
+  closeRoleModal();
+  applyRoleUI();
+  showToast(`Role switched to ${roleDisplayNames[role]}`, 'success');
+}
+
+function applyRoleUI() {
+  // Update sidebar user info
+  const infoEl = document.getElementById('sidebarUserInfo');
+  if (infoEl) {
+    infoEl.innerHTML = `Demo User<br><small>${roleDisplayNames[currentRole]} ▼</small>`;
+  }
+
+  // Update Navigation based on role
+  const showNav = (id, show) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = show ? 'flex' : 'none';
+  };
+
+  if (currentRole === 'individual') {
+    showNav('nav-home', true);
+    showNav('nav-analyze', true);
+    showNav('nav-marketplace', true);
+    showNav('nav-materials', false);
+    showNav('nav-makers', false);
+    showNav('nav-recyclers', false);
+    showNav('nav-mylistings', true);
+  } else if (currentRole === 'recycler') {
+    showNav('nav-home', true);
+    showNav('nav-analyze', false);
+    showNav('nav-marketplace', true);
+    showNav('nav-materials', true);
+    showNav('nav-makers', false);
+    showNav('nav-recyclers', true);
+    showNav('nav-mylistings', false);
+  } else if (currentRole === 'industry') {
+    showNav('nav-home', true);
+    showNav('nav-analyze', false);
+    showNav('nav-marketplace', true);
+    showNav('nav-materials', true);
+    showNav('nav-makers', true);
+    showNav('nav-recyclers', true);
+    showNav('nav-mylistings', false);
+  } else if (currentRole === 'maker') {
+    showNav('nav-home', true);
+    showNav('nav-analyze', false);
+    showNav('nav-marketplace', true);
+    showNav('nav-materials', true);
+    showNav('nav-makers', true);
+    showNav('nav-recyclers', false);
+    showNav('nav-mylistings', true);
+  } else if (currentRole === 'buyer') {
+    showNav('nav-home', true);
+    showNav('nav-analyze', false);
+    showNav('nav-marketplace', true);
+    showNav('nav-materials', false);
+    showNav('nav-makers', true);
+    showNav('nav-recyclers', false);
+    showNav('nav-mylistings', false);
+  }
+
+  // Navigate to appropriate default page for the role if current page is hidden
+  const currentNav = document.getElementById('nav-' + currentPage);
+  if (currentNav && currentNav.style.display === 'none') {
+    if (currentRole === 'buyer' || currentRole === 'recycler' || currentRole === 'industry' || currentRole === 'maker') {
+      navigateTo('marketplace');
+    } else {
+      navigateTo('home');
+    }
+  }
+}
+
+// Initial UI setup
+applyRoleUI();
+navigateTo('home');
+

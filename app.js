@@ -10,6 +10,11 @@ function saveState(){localStorage.setItem('reloop_listings',JSON.stringify(userL
 function showToast(msg,type='info'){const c=document.getElementById('toastContainer');const t=document.createElement('div');t.className='toast '+type;t.innerHTML=(type==='success'?'✅':type==='error'?'❌':'ℹ️')+' '+msg;c.appendChild(t);setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),300);},3000);}
 
 // Navigation
+function toggleMobileMenu() {
+  const navLinks = document.getElementById('navLinks');
+  if (navLinks) navLinks.classList.toggle('open');
+}
+
 function navigateHome() {
   navigateTo('home');
 }
@@ -17,9 +22,15 @@ function navigateHome() {
 function navigateTo(page, event) {
   if (event) event.preventDefault();
   
-  // Close dropdown if open
+  // Close dropdown & mobile drawer if open
   const dropdown = document.getElementById('profileDropdown');
   if (dropdown) dropdown.classList.remove('open');
+  const navLinks = document.getElementById('navLinks');
+  if (navLinks) navLinks.classList.remove('open');
+  const modalOverlay = document.getElementById('modalOverlay');
+  if (modalOverlay) modalOverlay.classList.remove('open');
+  const roleModalOverlay = document.getElementById('roleModalOverlay');
+  if (roleModalOverlay) roleModalOverlay.classList.remove('open');
 
   document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(a => a.classList.remove('active'));
@@ -66,7 +77,7 @@ function loadDemo(id){
 // Upload handling
 const uploadZone=document.getElementById('uploadZone');
 const imageInput=document.getElementById('imageInput');
-uploadZone.addEventListener('click',()=>imageInput.click());
+uploadZone.addEventListener('click',(e)=>{if(e.target!==imageInput)imageInput.click();});
 uploadZone.addEventListener('keydown',e=>{if(e.key==='Enter')imageInput.click();});
 uploadZone.addEventListener('dragover',e=>{e.preventDefault();uploadZone.classList.add('dragover');});
 uploadZone.addEventListener('dragleave',()=>uploadZone.classList.remove('dragover'));
@@ -88,6 +99,7 @@ function handleImage(file){
 
 function clearAnalysis(){
   document.getElementById('itemDescription').value='';
+  imageInput.value = '';
   uploadedImage=null;
   document.getElementById('imagePreview').style.display='none';
   document.getElementById('analyzeResult').style.display='none';
@@ -266,7 +278,16 @@ function renderMyListings(){
     <div class="my-listing-item"><span class="emoji">${l.emoji||'📦'}</span><div class="my-listing-info"><h4>${l.title}</h4><small>${l.category} · ${l.condition} · ${l.price===0?'Free':l.currency+' '+l.price}</small></div>
     <button class="btn btn-ghost btn-sm" onclick="removeMyListing(${l.id})">🗑️</button></div>`).join('');
 }
-function removeMyListing(id){const i=userListings.findIndex(x=>x.id===id);if(i>-1){userListings.splice(i,1);saveState();renderMyListings();showToast('Listing removed','info');}}
+function removeMyListing(id){
+  const i=userListings.findIndex(x=>x.id===id);
+  if(i>-1){
+    userListings.splice(i,1);
+    saveState();
+    renderMyListings();
+    if(currentPage==='marketplace') renderMarketplace();
+    showToast('Listing removed','info');
+  }
+}
 
 // Modal
 function openModal(title,bodyHTML){
@@ -275,7 +296,7 @@ function openModal(title,bodyHTML){
   document.getElementById('modalOverlay').classList.add('open');
 }
 function closeModal(e){if(!e||e.target===document.getElementById('modalOverlay'))document.getElementById('modalOverlay').classList.remove('open');}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeRoleModal();}});
 
 function openListingModal(id){
   const item=[...MOCK_LISTINGS,...userListings].find(x=>x.id===id);if(!item)return;
@@ -325,8 +346,11 @@ function openCreateListingModal(type){
 }
 
 function publishListing(){
-  const listing={id:Date.now(),title:document.getElementById('lstTitle').value||'Untitled',description:document.getElementById('lstDesc').value,category:document.getElementById('lstCat').value||'Other',material:document.getElementById('lstMat').value||'Mixed',condition:document.getElementById('lstCond').value,price:parseInt(document.getElementById('lstPrice').value)||0,currency:'৳',location:document.getElementById('lstLoc').value||'Dhaka',sellerRole:'Individual',sellerName:'Demo User',tag:parseInt(document.getElementById('lstPrice').value)===0?'donate':'reusable',emoji:'📦',listedAt:'Just now'};
+  const profile=MOCK_PROFILES[currentRole]||{roleLabel:'Individual',name:'Demo User'};
+  const listing={id:Date.now(),title:document.getElementById('lstTitle').value||'Untitled',description:document.getElementById('lstDesc').value,category:document.getElementById('lstCat').value||'Other',material:document.getElementById('lstMat').value||'Mixed',condition:document.getElementById('lstCond').value,price:parseInt(document.getElementById('lstPrice').value)||0,currency:'৳',location:document.getElementById('lstLoc').value||'Dhaka',sellerRole:profile.roleLabel,sellerName:profile.name,tag:parseInt(document.getElementById('lstPrice').value)===0?'donate':'reusable',emoji:'📦',listedAt:'Just now'};
   userListings.push(listing);saveState();closeModal();showToast('Listing published!','success');
+  if(currentPage==='marketplace') renderMarketplace();
+  if(currentPage==='mylistings') renderMyListings();
 }
 
 // Init
@@ -344,6 +368,8 @@ const roleDisplayNames = {
 };
 
 function openRoleSelectionModal() {
+  const dropdown = document.getElementById('profileDropdown');
+  if (dropdown) dropdown.classList.remove('open');
   document.getElementById('roleModalOverlay').classList.add('open');
 }
 
@@ -408,42 +434,50 @@ function applyRoleUI() {
     if (heroActions) heroActions.innerHTML = `<button class="btn btn-primary btn-lg" onclick="openRoleSelectionModal()">Get Started →</button><button class="btn btn-secondary btn-lg" onclick="document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'})">See How It Works</button>`;
   }
 
-  // Update Navigation based on role
+  // Update Navigation based on role / logged in state
   const showNav = (id, show) => {
     const el = document.getElementById(id);
     if (el) el.style.display = show ? 'block' : 'none';
   };
 
-  if (currentRole === 'individual') {
-    showNav('nav-materials-link', false);
-    showNav('nav-makers-link', false);
-    showNav('nav-recyclers-link', false);
-    showNav('nav-mylistings-link', true);
-    showNav('dropdown-listings', true);
-  } else if (currentRole === 'recycler') {
-    showNav('nav-materials-link', true);
-    showNav('nav-makers-link', false);
-    showNav('nav-recyclers-link', true);
-    showNav('nav-mylistings-link', false);
-    showNav('dropdown-listings', false);
-  } else if (currentRole === 'industry') {
+  if (!isLoggedIn) {
     showNav('nav-materials-link', true);
     showNav('nav-makers-link', true);
     showNav('nav-recyclers-link', true);
     showNav('nav-mylistings-link', false);
     showNav('dropdown-listings', false);
-  } else if (currentRole === 'maker') {
-    showNav('nav-materials-link', true);
-    showNav('nav-makers-link', true);
-    showNav('nav-recyclers-link', false);
-    showNav('nav-mylistings-link', true);
-    showNav('dropdown-listings', true);
-  } else if (currentRole === 'buyer') {
-    showNav('nav-materials-link', false);
-    showNav('nav-makers-link', true);
-    showNav('nav-recyclers-link', false);
-    showNav('nav-mylistings-link', false);
-    showNav('dropdown-listings', false);
+  } else {
+    if (currentRole === 'individual') {
+      showNav('nav-materials-link', false);
+      showNav('nav-makers-link', false);
+      showNav('nav-recyclers-link', false);
+      showNav('nav-mylistings-link', true);
+      showNav('dropdown-listings', true);
+    } else if (currentRole === 'recycler') {
+      showNav('nav-materials-link', true);
+      showNav('nav-makers-link', false);
+      showNav('nav-recyclers-link', true);
+      showNav('nav-mylistings-link', false);
+      showNav('dropdown-listings', false);
+    } else if (currentRole === 'industry') {
+      showNav('nav-materials-link', true);
+      showNav('nav-makers-link', true);
+      showNav('nav-recyclers-link', true);
+      showNav('nav-mylistings-link', false);
+      showNav('dropdown-listings', false);
+    } else if (currentRole === 'maker') {
+      showNav('nav-materials-link', true);
+      showNav('nav-makers-link', true);
+      showNav('nav-recyclers-link', false);
+      showNav('nav-mylistings-link', true);
+      showNav('dropdown-listings', true);
+    } else if (currentRole === 'buyer') {
+      showNav('nav-materials-link', false);
+      showNav('nav-makers-link', true);
+      showNav('nav-recyclers-link', false);
+      showNav('nav-mylistings-link', false);
+      showNav('dropdown-listings', false);
+    }
   }
 }
 

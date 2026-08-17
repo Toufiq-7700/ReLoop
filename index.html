@@ -25,6 +25,7 @@
   <div class="nav-brand" onclick="navigateHome()">
     <span class="nav-brand-icon">↻</span> ReLoop
   </div>
+  <button class="mobile-menu-toggle" id="mobileMenuToggle" onclick="toggleMobileMenu()" aria-label="Toggle navigation">☰</button>
   <div class="nav-links" id="navLinks">
     <a href="#" class="nav-link active" data-page="home" onclick="navigateTo('home', event)">How It Works</a>
     <a href="#" class="nav-link" data-page="marketplace" onclick="navigateTo('marketplace', event)">Marketplace</a>
@@ -239,11 +240,11 @@
       <p style="font-size:1.1rem;">Here's what's happening in your ReLoop account.</p>
     </div>
     <div class="page-body container" style="max-width:1000px;">
-      <div class="dashboard-summary-grid" id="dashboardSummaryGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:1.5rem; margin-bottom:3rem;">
+      <div class="dashboard-summary-grid" id="dashboardSummaryGrid">
         <!-- JS rendered -->
       </div>
       <h3 style="margin-bottom:1.5rem; color:var(--text-secondary);">Quick Actions</h3>
-      <div class="dashboard-actions-grid" id="dashboardActionsGrid" style="display:flex; gap:1rem; flex-wrap:wrap;">
+      <div class="dashboard-actions-grid" id="dashboardActionsGrid">
         <!-- JS rendered -->
       </div>
     </div>
@@ -299,8 +300,8 @@
             <div class="upload-zone-icon">📸</div>
             <p>Drop an image here or <strong>click to upload</strong></p>
             <small style="color:var(--text-muted)">JPG, PNG — max 5MB</small>
-            <input type="file" id="imageInput" accept="image/*" class="sr-only">
-            <img id="imagePreview" class="image-preview" alt="Preview" style="display:none;">
+            <input type="file" id="imageInput" accept="image/*" class="sr-only" onclick="event.stopPropagation()">
+            <img id="imagePreview" class="image-preview" alt="Preview" style="display:none;" onclick="event.stopPropagation()">
           </div>
           <div class="form-group" style="margin-top:2rem;">
             <label for="itemDescription">Or describe your item</label>

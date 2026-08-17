@@ -531,77 +531,125 @@ document.querySelectorAll('.animate-on-scroll').forEach(el => {
   observer.observe(el);
 });
 
-// Generate Floating Squares with Mouse/Scroll Parallax
-function generateSquares() {
+// Generate SVG Circuit Background
+function generateCircuit() {
   const container = document.getElementById('floatingSquares');
   if (!container) return;
   container.innerHTML = '';
   
-  const numSquares = 40;
-  for (let i = 0; i < numSquares; i++) {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'square-wrapper';
-    
-    const square = document.createElement('div');
-    square.className = 'square';
-    
-    const size = Math.random() * 100 + 20;
-    const left = Math.random() * 110 - 5;
-    const top = Math.random() * 110 - 5;
-    const delay = Math.random() * 5;
-    const duration = Math.random() * 15 + 15;
-    const depth = Math.random() * 2.5 + 1; // 1 to 3.5
-    
-    wrapper.style.left = `${left}%`;
-    wrapper.style.top = `${top}%`;
-    wrapper.style.setProperty('--depth', depth);
-    
-    square.style.width = `${size}px`;
-    square.style.height = `${size}px`;
-    square.style.animationDelay = `-${delay}s`;
-    square.style.animationDuration = `${duration}s`;
-    
-    // Opacity based on depth - closer is more visible
-    square.style.opacity = 0.05 + (1 / depth) * 0.15;
-    
-    wrapper.appendChild(square);
-    container.appendChild(wrapper);
-  }
+  // Set up SVG container
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 1920 1080');
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+  svg.style.width = '100%';
+  svg.style.height = '100%';
+  svg.style.position = 'absolute';
+  svg.style.inset = '0';
+  svg.style.opacity = '0.6';
+  
+  // Parallax wrapper for SVG
+  const wrapper = document.createElement('div');
+  wrapper.className = 'circuit-parallax-wrapper';
+  wrapper.style.width = '100%';
+  wrapper.style.height = '100%';
+  wrapper.style.position = 'absolute';
+  wrapper.appendChild(svg);
+  container.appendChild(wrapper);
 
-  // Hero section floating elements
-  const heroGrid = document.querySelector('.hero');
-  if (heroGrid) {
-    const heroSquaresData = [
-      { label: "AI", icon: "✨", color: "rgba(16, 185, 129, 0.2)" },
-      { label: "Recycle", icon: "♻️", color: "rgba(6, 182, 212, 0.2)" },
-      { label: "Maker", icon: "🎨", color: "rgba(99, 102, 241, 0.2)" },
-      { label: "Buyer", icon: "🛍️", color: "rgba(244, 114, 182, 0.2)" },
-      { label: "Industry", icon: "🏭", color: "rgba(251, 191, 36, 0.2)" }
-    ];
-    
-    heroSquaresData.forEach((data, index) => {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'square-wrapper hero-float-wrapper';
-      wrapper.style.setProperty('--depth', 1.2 + Math.random());
-      
-      const angle = (index / heroSquaresData.length) * Math.PI * 2;
-      const radius = 35 + Math.random() * 10;
-      wrapper.style.left = `calc(50% + ${Math.cos(angle) * radius}% - 40px)`;
-      wrapper.style.top = `calc(50% + ${Math.sin(angle) * radius}% - 40px)`;
-      
-      const el = document.createElement('div');
-      el.className = 'hero-float-square';
-      el.style.borderColor = data.color;
-      el.style.boxShadow = `0 0 15px ${data.color}`;
-      el.innerHTML = `<span class="icon">${data.icon}</span><span class="label">${data.label}</span>`;
-      el.style.animationDelay = `-${Math.random() * 5}s`;
-      
-      wrapper.appendChild(el);
-      heroGrid.appendChild(wrapper);
-    });
-  }
+  // Network Definitions
+  const paths = [
+    { d: "M -100 200 L 300 200 L 300 500 L 700 500 L 700 800 L 1000 800", color: "var(--accent-emerald)", dur: "12s" },
+    { d: "M 1920 150 L 1400 150 L 1400 400 L 1000 400", color: "var(--accent-cyan)", dur: "10s" },
+    { d: "M 500 -100 L 500 350 L 100 350", color: "rgba(255,255,255,0.4)", dur: "8s" },
+    { d: "M 2020 850 L 1600 850 L 1600 600 L 1200 600 L 1200 1000 L 800 1000", color: "var(--accent-indigo)", dur: "15s" },
+    { d: "M 800 0 L 800 250 L 1150 250 L 1150 150", color: "var(--accent-emerald)", dur: "9s" },
+    { d: "M 0 900 L 400 900 L 400 700 L 800 700", color: "var(--accent-cyan)", dur: "11s" },
+    { d: "M 1500 1180 L 1500 900 L 1800 900", color: "rgba(255,255,255,0.4)", dur: "7s" }
+  ];
 
-  // Mouse and Scroll tracking for CSS variables
+  const boxes = [
+    { x: 300, y: 170, w: 100, h: 60, text: "AI", color: "var(--accent-emerald)" },
+    { x: 1400, y: 120, w: 140, h: 60, text: "RECYCLE", color: "var(--accent-cyan)" },
+    { x: 700, y: 470, w: 120, h: 60, text: "MAKER", color: "var(--accent-indigo)" },
+    { x: 1600, y: 820, w: 140, h: 60, text: "INDUSTRY", color: "var(--accent-emerald)" },
+    { x: 400, y: 870, w: 120, h: 60, text: "BUYER", color: "var(--accent-cyan)" }
+  ];
+
+  const nodes = [
+    { x: 300, y: 200 }, { x: 300, y: 500 }, { x: 700, y: 500 }, { x: 700, y: 800 },
+    { x: 1400, y: 150 }, { x: 1400, y: 400 }, { x: 1000, y: 400 },
+    { x: 500, y: 350 }, { x: 1600, y: 850 }, { x: 1600, y: 600 },
+    { x: 1200, y: 600 }, { x: 1200, y: 1000 }, { x: 800, y: 250 },
+    { x: 1150, y: 250 }, { x: 400, y: 900 }, { x: 400, y: 700 },
+    { x: 1500, y: 900 }
+  ];
+
+  // Draw Paths
+  paths.forEach((p, i) => {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', p.d);
+    path.setAttribute('id', `circuit-path-${i}`);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', 'rgba(255, 255, 255, 0.04)');
+    path.setAttribute('stroke-width', '2');
+    svg.appendChild(path);
+
+    // Glowing Particle
+    const particle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    particle.setAttribute('r', '3');
+    particle.setAttribute('fill', p.color);
+    particle.setAttribute('filter', 'drop-shadow(0 0 5px ' + p.color + ')');
+    
+    const animateMotion = document.createElementNS('http://www.w3.org/2000/svg', 'animateMotion');
+    animateMotion.setAttribute('dur', p.dur);
+    animateMotion.setAttribute('repeatCount', 'indefinite');
+    
+    const mpath = document.createElementNS('http://www.w3.org/2000/svg', 'mpath');
+    mpath.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `#circuit-path-${i}`);
+    
+    animateMotion.appendChild(mpath);
+    particle.appendChild(animateMotion);
+    svg.appendChild(particle);
+  });
+
+  // Draw Boxes
+  boxes.forEach(b => {
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', b.x - b.w/2);
+    rect.setAttribute('y', b.y - b.h/2);
+    rect.setAttribute('width', b.w);
+    rect.setAttribute('height', b.h);
+    rect.setAttribute('fill', 'rgba(17, 24, 39, 0.8)');
+    rect.setAttribute('stroke', b.color);
+    rect.setAttribute('stroke-width', '1');
+    rect.setAttribute('rx', '4');
+    svg.appendChild(rect);
+
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', b.x);
+    text.setAttribute('y', b.y + 4); // center alignment adjustment
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('fill', b.color);
+    text.setAttribute('font-size', '12px');
+    text.setAttribute('font-weight', '600');
+    text.setAttribute('letter-spacing', '2px');
+    text.textContent = b.text;
+    svg.appendChild(text);
+  });
+
+  // Draw Nodes
+  nodes.forEach(n => {
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', n.x);
+    circle.setAttribute('cy', n.y);
+    circle.setAttribute('r', '4');
+    circle.setAttribute('fill', 'var(--bg-card)');
+    circle.setAttribute('stroke', 'rgba(255,255,255,0.2)');
+    circle.setAttribute('stroke-width', '1.5');
+    svg.appendChild(circle);
+  });
+
+  // Mouse and Scroll tracking for Parallax
   let mouseX = 0, mouseY = 0;
   let currentX = 0, currentY = 0;
   
@@ -610,15 +658,11 @@ function generateSquares() {
     mouseY = (e.clientY / window.innerHeight) * 2 - 1;
   });
   
-  // Smooth interpolation loop
   function updateParallax() {
     currentX += (mouseX - currentX) * 0.05;
     currentY += (mouseY - currentY) * 0.05;
     
-    document.documentElement.style.setProperty('--mouse-x', currentX);
-    document.documentElement.style.setProperty('--mouse-y', currentY);
-    document.documentElement.style.setProperty('--scroll-y', window.scrollY);
-    
+    wrapper.style.transform = `translate3d(${currentX * 30}px, ${currentY * 30 - window.scrollY * 0.15}px, 0)`;
     requestAnimationFrame(updateParallax);
   }
   
@@ -626,4 +670,4 @@ function generateSquares() {
     updateParallax();
   }
 }
-generateSquares();
+generateCircuit();
